@@ -17,7 +17,6 @@ export class SampleModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     this.plugin.state.isOpen = false;
-    console.log(this.plugin.state);
   }
 
   initModal() {
@@ -38,13 +37,12 @@ export class SampleModal extends Modal {
 
     counterButton.addEventListener('click', async () => {
       this.plugin.state.counter++;
-      this.rerenderModal();
+      this.updateCounterElement(contentEl, this.plugin.state.counter);
     });
   }
 
-  rerenderModal() {
-    const { contentEl } = this;
-    const counterTextEl = contentEl.find('.scribe-counter');
+  updateCounterElement(container: HTMLElement, count: number) {
+    const counterTextEl = container.find('.scribe-counter');
     counterTextEl.setText(`Counter: ${this.plugin.state.counter}`);
   }
 }
