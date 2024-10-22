@@ -1,20 +1,17 @@
 import { Plugin } from 'obsidian';
-import { handleSettingsTab } from './settings/settings';
+import {
+  DEFAULT_SETTINGS,
+  handleSettingsTab,
+  type ScribePluginSettings,
+} from './settings/settings';
 import { handleRibbon } from './ribbon/ribbon';
 import { handleCommands } from './commands/commands';
+import { getDefaultPathSettings } from './util/pathUtils';
 
 interface ScribeState {
   isOpen: boolean;
   counter: number;
 }
-
-interface ScribePluginSettings {
-  mySetting: string;
-}
-
-const DEFAULT_SETTINGS: ScribePluginSettings = {
-  mySetting: 'default',
-};
 
 const DEFAULT_STATE: ScribeState = {
   isOpen: false,
@@ -22,25 +19,37 @@ const DEFAULT_STATE: ScribeState = {
 };
 
 export default class ScribePlugin extends Plugin {
-  settings: ScribePluginSettings;
+  settings: ScribePluginSettings = DEFAULT_SETTINGS;
   state: ScribeState = DEFAULT_STATE;
 
   async onload() {
-    console.log(`Reloaded!: ${new Date().toDateString()}`);
+    console.log(`Reloaded: ${new Date().toDateString()}`);
 
     await this.loadSettings();
 
     handleRibbon(this);
     handleCommands(this);
     handleSettingsTab(this);
-
-    // This adds a settings tab so the user can configure various aspects of the plugin
   }
 
   onunload() {}
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const savedUserData: ScribePluginSettings = await this.loadData();
+    this.settings = { ...DEFAULT_SETTINGS, ...savedUserData };
+
+    console.log('this.settings', this.settings);
+    const defaultPathSettings = await getDefaultPathSettings(this);
+    console.log('defaultPathSettings', defaultPathSettings);
+
+    if (!this.settings.recordingDirectory) {
+      this.settings.recordingDirectory =
+        defaultPathSettings.defaultNewResourcePath;
+    }
+    if (!this.settings.transcriptDirectory) {
+      this.settings.transcriptDirectory =
+        defaultPathSettings.defaultNewFilePath;
+    }
   }
 
   async saveSettings() {
