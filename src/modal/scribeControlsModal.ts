@@ -1,6 +1,6 @@
+import { clearInterval, setInterval } from 'node:timers';
 import { type App, Modal, Notice } from 'obsidian';
 import type ScribePlugin from 'src';
-import { clearInterval, setInterval } from 'timers';
 
 export class ScribeControlsModal extends Modal {
   plugin: ScribePlugin;
@@ -18,6 +18,8 @@ export class ScribeControlsModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     this.plugin.state.isOpen = false;
+    this.plugin.state.isRecording = false;
+    this.handleStopwatch(contentEl, false);
   }
 
   private startTime: number;
@@ -39,7 +41,7 @@ export class ScribeControlsModal extends Modal {
     const counterText = infoGroup.createEl('span', {
       cls: 'scribe-modal-info-counter-span',
     });
-    counterText.setText('Counter: 00:00:00');
+    counterText.setText('Counter: 00:00');
 
     const controlGroup = controlGroupWrapper.createDiv({
       cls: 'scribe-controls-modal-control-group',
@@ -73,21 +75,20 @@ export class ScribeControlsModal extends Modal {
       recordBtnEl.setText('Save');
     } else {
       recordBtnEl.setText('Record');
-      new Notice('Scribe: Recording Stopped');
+      new Notice('Scribe: Recording Saved');
     }
   }
 
   handleStopwatch(container: HTMLElement, isRecording: boolean) {
-    const counterText = container.find('.scribe-modal-info-counter-span');
-    console.log(isRecording);
     if (isRecording) {
-      this.startStopwatch(counterText);
+      this.startStopwatch(container);
     } else {
       this.stopStopwatch();
     }
   }
 
-  startStopwatch(counterText: HTMLElement) {
+  startStopwatch(container: HTMLElement) {
+    const counterText = container.find('.scribe-modal-info-counter-span');
     this.startTime = Date.now();
     console.log('start stopwatch');
     this.stopwatchInterval = setInterval(() => {
@@ -102,16 +103,15 @@ export class ScribeControlsModal extends Modal {
   }
 
   formatTime(milliseconds: number): string {
+    console.log(milliseconds);
     let seconds = Math.floor(milliseconds / 1000);
     let minutes = Math.floor(seconds / 60);
-    let hours = Math.floor(minutes / 60);
 
     seconds = seconds % 60;
     minutes = minutes % 60;
 
-    // Pad to 2 digits
     const pad = (num: number) => num.toString().padStart(2, '0');
 
-    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    return `${pad(minutes)}:${pad(seconds)}`;
   }
 }
