@@ -23,13 +23,20 @@ export default class ScribePlugin extends Plugin {
   state: ScribeState = DEFAULT_STATE;
 
   async onload() {
-    console.log(`Reloaded: ${new Date().toDateString()}`);
+    console.log(`Reloaded Scribe: ${new Date().toDateString()}`);
 
-    await this.loadSettings();
-
-    handleRibbon(this);
-    handleCommands(this);
-    handleSettingsTab(this);
+    /**
+     * Ensures that Obsidian is fully bootstrapped before plugging in.
+     * Helps with load time
+     * Ensures that when we get the default folders for settings, they are available
+     * https://docs.obsidian.md/Plugins/Guides/Optimizing+plugin+load+time#Listening+to+%60vault.on('create')%60
+     */
+    this.app.workspace.onLayoutReady(async () => {
+      await this.loadSettings();
+      handleRibbon(this);
+      handleCommands(this);
+      handleSettingsTab(this);
+    });
   }
 
   onunload() {}
@@ -40,7 +47,7 @@ export default class ScribePlugin extends Plugin {
 
     console.log('this.settings', this.settings);
     const defaultPathSettings = await getDefaultPathSettings(this);
-    console.log('defaultPathSettings', defaultPathSettings);
+    console.log('defaultPathSettings:', defaultPathSettings);
 
     if (!this.settings.recordingDirectory) {
       this.settings.recordingDirectory =
