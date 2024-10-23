@@ -1,0 +1,5 @@
+export enum RECORDING_STATUS {
+  IDLE = 'IDLE',
+  RECORDING = 'RECORDING',
+  PAUSED = 'PAUSED',
+}

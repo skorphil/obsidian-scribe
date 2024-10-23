@@ -1,5 +1,5 @@
-import { clearInterval, setInterval } from 'node:timers';
-import { type App, Modal, Notice } from 'obsidian';
+import { clearInterval, setInterval } from 'timers';
+import { Modal, Notice } from 'obsidian';
 import type ScribePlugin from 'src';
 
 export class ScribeControlsModal extends Modal {
@@ -14,6 +14,7 @@ export class ScribeControlsModal extends Modal {
   }
 
   onOpen() {
+    console.log('Plugin State from Modal:', this.plugin.state);
     this.plugin.state.isOpen = true;
     this.initModal();
   }
@@ -27,6 +28,7 @@ export class ScribeControlsModal extends Modal {
   }
 
   initModal() {
+    console.log('init modal');
     const { contentEl } = this;
     contentEl.innerHTML = '';
 
@@ -59,6 +61,7 @@ export class ScribeControlsModal extends Modal {
       const updatedRecordingState = !this.plugin.state.isRecording;
       this.updateRecordingState(contentEl, updatedRecordingState);
       this.handleStopwatch(contentEl, updatedRecordingState);
+      this.handleRecording(updatedRecordingState);
     });
 
     deleteButton.addEventListener('click', async () => {
@@ -72,6 +75,7 @@ export class ScribeControlsModal extends Modal {
     const recordBtnEl = container.find('.scribe-control-record-btn');
     if (isRecording) {
       new Notice('Scribe: Recording Started');
+
       recordBtnEl.setText('Save');
     } else {
       recordBtnEl.setText('Record');
@@ -87,6 +91,14 @@ export class ScribeControlsModal extends Modal {
     }
   }
 
+  handleRecording(isRecording: boolean) {
+    if (isRecording) {
+      this.plugin.startRecording();
+    } else {
+      this.plugin.stopRecording();
+    }
+  }
+
   startStopwatch(container: HTMLElement) {
     const counterText = container.find('.scribe-modal-info-counter-span');
     this.startTime = Date.now();
@@ -94,24 +106,23 @@ export class ScribeControlsModal extends Modal {
     this.stopwatchInterval = setInterval(() => {
       console.log('interval');
       this.elapsedTime = Date.now() - this.startTime;
-      counterText.setText(`Counter: ${this.formatTime(this.elapsedTime)}`);
-    }, 1000); // Update every second
+      counterText.setText(`Counter: ${formatTime(this.elapsedTime)}`);
+    }, 1000);
   }
 
   stopStopwatch() {
     clearInterval(this.stopwatchInterval);
   }
+}
 
-  formatTime(milliseconds: number): string {
-    console.log(milliseconds);
-    let seconds = Math.floor(milliseconds / 1000);
-    let minutes = Math.floor(seconds / 60);
+function formatTime(milliseconds: number): string {
+  let seconds = Math.floor(milliseconds / 1000);
+  let minutes = Math.floor(seconds / 60);
 
-    seconds = seconds % 60;
-    minutes = minutes % 60;
+  seconds = seconds % 60;
+  minutes = minutes % 60;
 
-    const pad = (num: number) => num.toString().padStart(2, '0');
+  const pad = (num: number) => num.toString().padStart(2, '0');
 
-    return `${pad(minutes)}:${pad(seconds)}`;
-  }
+  return `${pad(minutes)}:${pad(seconds)}`;
 }

@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+import { Notice, Plugin, moment } from 'obsidian';
 import {
   DEFAULT_SETTINGS,
   handleSettingsTab,
@@ -7,17 +7,21 @@ import {
 import { handleRibbon } from './ribbon/ribbon';
 import { handleCommands } from './commands/commands';
 import { getDefaultPathSettings } from './util/pathUtils';
+import { AudioRecord } from './audioRecord/audioRecord';
+import { saveAudioRecording } from './util/fileUtils';
 
 interface ScribeState {
   isOpen: boolean;
   counter: number;
   isRecording: boolean;
+  audioRecord?: AudioRecord | null;
 }
 
 const DEFAULT_STATE: ScribeState = {
   isOpen: false,
   counter: 0,
   isRecording: false,
+  audioRecord: null,
 };
 
 export default class ScribePlugin extends Plugin {
@@ -63,5 +67,32 @@ export default class ScribePlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  async startRecording() {
+    console.log('start Recording:', this.state.audioRecord);
+    const newRecording = new AudioRecord();
+    this.state.audioRecord = newRecording;
+
+    newRecording.startRecording();
+  }
+
+  async stopRecording() {
+    if (!this.state.audioRecord) {
+      console.error(
+        'Stop recording fired without an audioRecord, we are in a weird state',
+      );
+      return;
+    }
+    console.log('Stop Recording', this.state.audioRecord);
+
+    const recordingBlob = await this.state.audioRecord.stopRecording();
+    const recordingBuffer = await recordingBlob.arrayBuffer();
+
+    if (recordingBuffer) {
+      await saveAudioRecording(recordingBuffer, this);
+    }
+
+    this.state.audioRecord = null;
   }
 }
