@@ -8,9 +8,9 @@ import { handleRibbon } from './ribbon/ribbon';
 import { handleCommands } from './commands/commands';
 import { getDefaultPathSettings } from './util/pathUtils';
 import { AudioRecord } from './audioRecord/audioRecord';
-import { saveAudioRecording } from './util/fileUtils';
+import { saveAudioRecording, saveNoteWithTranscript } from './util/fileUtils';
 import type OpenAI from 'openai';
-import { initOpenAiClient } from './util/openAiUtils';
+import { handleAudioTranscription, initOpenAiClient } from './util/openAiUtils';
 
 interface ScribeState {
   isOpen: boolean;
@@ -99,7 +99,17 @@ export default class ScribePlugin extends Plugin {
     }
     console.log('Stop Recording', this.state.audioRecord);
 
-    const file = await this.handleAudioRecordingSave(this.state.audioRecord);
+    const { recordingBuffer, recordingFile } =
+      await this.handleAudioRecordingSave(this.state.audioRecord);
+    if (this.state.openAiClient) {
+      const transcript = await handleAudioTranscription(
+        this.state.openAiClient,
+        recordingBuffer,
+      );
+
+      await saveNoteWithTranscript(this, transcript, recordingFile);
+    }
+
     this.state.audioRecord = null;
   }
 
@@ -107,8 +117,7 @@ export default class ScribePlugin extends Plugin {
     const recordingBlob = await audioRecord.stopRecording();
     const recordingBuffer = await recordingBlob.arrayBuffer();
 
-    if (recordingBuffer) {
-      return await saveAudioRecording(recordingBuffer, this);
-    }
+    const recordingFile = await saveAudioRecording(recordingBuffer, this);
+    return { recordingFile, recordingBuffer };
   }
 }
