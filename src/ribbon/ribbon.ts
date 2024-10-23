@@ -9,7 +9,7 @@ export function handleRibbon(plugin: ScribePlugin) {
     'Scribe',
     (evt: MouseEvent) => {
       plugin.state.isOpen = true;
-      new ScribeControlsModal(plugin).open();
+      plugin.controlModal.open();
     },
   );
   // Perform additional things with the ribbon

@@ -1,4 +1,4 @@
-import { Notice, Plugin, moment } from 'obsidian';
+import { Notice, Plugin, TFile, moment } from 'obsidian';
 import {
   DEFAULT_SETTINGS,
   handleSettingsTab,
@@ -11,6 +11,7 @@ import { AudioRecord } from './audioRecord/audioRecord';
 import { saveAudioRecording, saveNoteWithTranscript } from './util/fileUtils';
 import type OpenAI from 'openai';
 import { handleAudioTranscription, initOpenAiClient } from './util/openAiUtils';
+import { ScribeControlsModal } from './modal/scribeControlsModal';
 
 interface ScribeState {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const DEFAULT_STATE: ScribeState = {
 export default class ScribePlugin extends Plugin {
   settings: ScribePluginSettings = DEFAULT_SETTINGS;
   state: ScribeState = DEFAULT_STATE;
+  controlModal: ScribeControlsModal;
 
   async onload() {
     console.log(`Reloaded Scribe: ${new Date().toDateString()}`);
@@ -43,9 +45,12 @@ export default class ScribePlugin extends Plugin {
      */
     this.app.workspace.onLayoutReady(async () => {
       await this.loadSettings();
+
       handleRibbon(this);
       handleCommands(this);
       handleSettingsTab(this);
+
+      this.controlModal = new ScribeControlsModal(this);
     });
   }
 
@@ -106,11 +111,31 @@ export default class ScribePlugin extends Plugin {
         this.state.openAiClient,
         recordingBuffer,
       );
-
-      await saveNoteWithTranscript(this, transcript, recordingFile);
+      await this.handleTranscriptNoteCreation(transcript, recordingFile);
+      this.controlModal.close();
     }
 
     this.state.audioRecord = null;
+  }
+
+  private async handleTranscriptNoteCreation(
+    transcript: string,
+    recordingFile: TFile,
+  ) {
+    const noteWithTranscript = await saveNoteWithTranscript(
+      this,
+      transcript,
+      recordingFile,
+    );
+
+    if (noteWithTranscript) {
+      const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
+      this.app.workspace.openLinkText(
+        noteWithTranscript?.path,
+        currentPath,
+        true,
+      );
+    }
   }
 
   private async handleAudioRecordingSave(audioRecord: AudioRecord) {

@@ -55,7 +55,7 @@ export class ScribeControlsModal extends Modal {
     const recordButton = controlGroup.createEl('button', {
       cls: 'scribe-control-record-btn',
     });
-    this.updateRecordingState(contentEl, this.plugin.state.isRecording);
+    recordButton.setText('Record');
 
     recordButton.addEventListener('click', async () => {
       const updatedRecordingState = !this.plugin.state.isRecording;
@@ -75,7 +75,6 @@ export class ScribeControlsModal extends Modal {
     const recordBtnEl = container.find('.scribe-control-record-btn');
     if (isRecording) {
       new Notice('Scribe: Recording Started');
-
       recordBtnEl.setText('Save');
     } else {
       recordBtnEl.setText('Record');

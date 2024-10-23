@@ -14,10 +14,10 @@ export const DEFAULT_SETTINGS: ScribePluginSettings = {
 };
 
 export async function handleSettingsTab(plugin: ScribePlugin) {
-  plugin.addSettingTab(new SampleSettingTab(plugin.app, plugin));
+  plugin.addSettingTab(new ScribeSettingsTab(plugin.app, plugin));
 }
 
-export class SampleSettingTab extends PluginSettingTab {
+export class ScribeSettingsTab extends PluginSettingTab {
   plugin: ScribePlugin;
 
   constructor(app: App, plugin: ScribePlugin) {

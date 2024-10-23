@@ -1,4 +1,4 @@
-import { moment, normalizePath, TFile } from 'obsidian';
+import { moment, normalizePath, type TFile } from 'obsidian';
 
 import type ScribePlugin from 'src';
 
@@ -8,7 +8,7 @@ export async function saveAudioRecording(
 ) {
   const now = moment();
 
-  const fileName = `recording-${now.format('YYYY-MM-DD.HH.mm')}`;
+  const fileName = `recording-${now.format('YYYY-MM-DD.HH.mm.ss')}`;
   const pathToSave = plugin.settings.recordingDirectory;
   const fullPath = `${pathToSave}/${fileName}.${plugin.state.audioRecord?.fileExtension}`;
   console.log('Saving file to: ', fullPath);
@@ -32,14 +32,22 @@ export async function saveNoteWithTranscript(
 ) {
   const now = moment();
 
-  const fileName = `scribe-${now.format('YYYY-MM-DD.HH.mm')}`;
+  const fileName = `scribe-${now.format('YYYY-MM-DD.HH.mm.ss')}`;
   const pathToSave = plugin.settings.transcriptDirectory;
   const fullPath = `${pathToSave}/${fileName}.md`;
 
   const notePath = normalizePath(fullPath);
 
+  const noteContent = `![[${audioFile.path}]]
+
+  ${transcript}
+  `;
+
   try {
-    const savedFile = await plugin.app.vault.create(notePath, transcript);
+    const savedFile = await plugin.app.vault.create(notePath, noteContent);
+    plugin.app.fileManager.processFrontMatter(savedFile, (frontMatter) => {
+      frontMatter.source = `[[${audioFile.path}]]`;
+    });
 
     return savedFile;
   } catch (error) {
