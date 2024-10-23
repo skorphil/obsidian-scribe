@@ -1,14 +1,15 @@
 import { Notice } from 'obsidian';
 import type ScribePlugin from 'src';
+import { ScribeControlsModal } from 'src/modal/scribeControlsModal';
 
 export function handleRibbon(plugin: ScribePlugin) {
   // This creates an icon in the left ribbon.
   const ribbonIconEl = plugin.addRibbonIcon(
-    'dice',
-    'Sample Plugin',
+    'mic-vocal',
+    'Scribe',
     (evt: MouseEvent) => {
-      // Called when the user clicks the icon.
-      new Notice('This is a notice!');
+      plugin.state.isOpen = true;
+      new ScribeControlsModal(plugin).open();
     },
   );
   // Perform additional things with the ribbon

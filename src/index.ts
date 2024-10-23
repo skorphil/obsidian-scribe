@@ -11,11 +11,13 @@ import { getDefaultPathSettings } from './util/pathUtils';
 interface ScribeState {
   isOpen: boolean;
   counter: number;
+  isRecording: boolean;
 }
 
 const DEFAULT_STATE: ScribeState = {
   isOpen: false,
   counter: 0,
+  isRecording: false,
 };
 
 export default class ScribePlugin extends Plugin {

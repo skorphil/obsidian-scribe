@@ -1,6 +1,6 @@
 import { type Editor, MarkdownView } from 'obsidian';
 import type ScribePlugin from 'src';
-import { SampleModal } from 'src/modal/modal';
+import { ScribeControlsModal } from 'src/modal/scribeControlsModal';
 
 export function handleCommands(plugin: ScribePlugin) {
   // This adds a simple command that can be triggered anywhere
@@ -9,7 +9,7 @@ export function handleCommands(plugin: ScribePlugin) {
     name: 'Open sample modal (simple)',
     callback: () => {
       plugin.state.isOpen = true;
-      new SampleModal(plugin).open();
+      new ScribeControlsModal(plugin).open();
     },
   });
   // This adds an editor command that can perform some operation on the current editor instance
@@ -34,7 +34,7 @@ export function handleCommands(plugin: ScribePlugin) {
         // If checking is true, we're simply "checking" if the command can be run.
         // If checking is false, then we want to actually perform the operation.
         if (!checking) {
-          new SampleModal(plugin).open();
+          new ScribeControlsModal(plugin).open();
         }
 
         // This command will only show up in Command Palette when the check function returns true
