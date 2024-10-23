@@ -4,6 +4,10 @@ import type ScribePlugin from 'src';
 
 export class ScribeControlsModal extends Modal {
   plugin: ScribePlugin;
+  private startTime: number;
+  private stopwatchInterval: NodeJS.Timer;
+  private elapsedTime: number;
+
   constructor(plugin: ScribePlugin) {
     super(plugin.app);
     this.plugin = plugin;
@@ -21,10 +25,6 @@ export class ScribeControlsModal extends Modal {
     this.plugin.state.isRecording = false;
     this.handleStopwatch(contentEl, false);
   }
-
-  private startTime: number;
-  private stopwatchInterval: NodeJS.Timer;
-  private elapsedTime: number;
 
   initModal() {
     const { contentEl } = this;
