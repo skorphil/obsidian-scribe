@@ -9,12 +9,15 @@ import { handleCommands } from './commands/commands';
 import { getDefaultPathSettings } from './util/pathUtils';
 import { AudioRecord } from './audioRecord/audioRecord';
 import { saveAudioRecording } from './util/fileUtils';
+import type OpenAI from 'openai';
+import { initOpenAiClient } from './util/openAiUtils';
 
 interface ScribeState {
   isOpen: boolean;
   counter: number;
   isRecording: boolean;
-  audioRecord?: AudioRecord | null;
+  audioRecord: AudioRecord | null;
+  openAiClient: OpenAI | null;
 }
 
 const DEFAULT_STATE: ScribeState = {
@@ -22,6 +25,7 @@ const DEFAULT_STATE: ScribeState = {
   counter: 0,
   isRecording: false,
   audioRecord: null,
+  openAiClient: null,
 };
 
 export default class ScribePlugin extends Plugin {
@@ -51,9 +55,18 @@ export default class ScribePlugin extends Plugin {
     const savedUserData: ScribePluginSettings = await this.loadData();
     this.settings = { ...DEFAULT_SETTINGS, ...savedUserData };
 
-    console.log('this.settings', this.settings);
     const defaultPathSettings = await getDefaultPathSettings(this);
-    console.log('defaultPathSettings:', defaultPathSettings);
+
+    if (this.settings.openAiApiKey) {
+      this.state.openAiClient = initOpenAiClient(this.settings.openAiApiKey);
+    }
+
+    if (!this.settings.openAiApiKey) {
+      console.error(
+        'OpenAI Api key is needed in Scribes settings - https://platform.openai.com/settings',
+      );
+      new Notice('⚠️ Scribe: OpenAI Api key is missing in Scribes settings');
+    }
 
     if (!this.settings.recordingDirectory) {
       this.settings.recordingDirectory =
@@ -86,13 +99,16 @@ export default class ScribePlugin extends Plugin {
     }
     console.log('Stop Recording', this.state.audioRecord);
 
-    const recordingBlob = await this.state.audioRecord.stopRecording();
+    const file = await this.handleAudioRecordingSave(this.state.audioRecord);
+    this.state.audioRecord = null;
+  }
+
+  private async handleAudioRecordingSave(audioRecord: AudioRecord) {
+    const recordingBlob = await audioRecord.stopRecording();
     const recordingBuffer = await recordingBlob.arrayBuffer();
 
     if (recordingBuffer) {
-      await saveAudioRecording(recordingBuffer, this);
+      return await saveAudioRecording(recordingBuffer, this);
     }
-
-    this.state.audioRecord = null;
   }
 }
