@@ -39,7 +39,7 @@ export async function saveNoteWithTranscript(
   const { summary, title, insights, mermaidChart } = llmSummary;
 
   const formattedTitle = formatForFilename(title);
-  const fileName = `scribe-${formattedTitle}-${now.format('YYYY-MM-DD.HH.mm.ss')}`;
+  const fileName = `scribe-${now.format('YYYY-MM-DD')}-${formattedTitle}`;
   const pathToSave = plugin.settings.transcriptDirectory;
   const fullPath = `${pathToSave}/${fileName}.md`;
 
