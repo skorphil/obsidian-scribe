@@ -129,11 +129,7 @@ export async function handleTranscriptSummary(
   const noteSummary = z.object({
     summary: z.string().describe(
       `A summary of the transcript in Markdown.  It will be nested under a h1 # tag, so have no other headers that are greater than or equal to a h2 ## 
-      The Summary will consist of three sections, you will make these sections in Markdown
-      Create the following three sections in Markdown, <Summary>, <Insights>, <Mermaid Chart>
-        1. <Summary> Concise bullet points containing the primary points of the speaker
-        2. <Insights> A brief section on what insights and enhancements you think came through for what was said
-        3. <Marmaid Chart> A mermaid chart that shows a concept map consisting of both what insights you had along with what the speaker said
+         Concise bullet points containing the primary points of the speaker
         `,
     ),
     insights: z.string().describe(
