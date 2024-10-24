@@ -124,7 +124,6 @@ export async function handleTranscriptSummary(
     temperature: 0.5,
   });
   const messages = [new SystemMessage(systemPrompt)];
-  const parser = new JsonOutputParser();
 
   const noteSummary = z.object({
     summary: z.string().describe(
@@ -151,8 +150,6 @@ export async function handleTranscriptSummary(
   });
   const structuredLlm = model.withStructuredOutput(noteSummary);
   const result = (await structuredLlm.invoke(messages)) as LLMSummary;
-
-  console.log(result);
 
   return await result;
 }

@@ -74,9 +74,13 @@ ${transcript}
   }
 }
 
+/**
+ * Written by ChatGPT, hope it's okay
+ */
 function formatForFilename(input: string): string {
   // Remove problematic characters
   const safeString = input
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: It's all good
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
     // Optional: Replace spaces with underscores or another preferred character
     .replace(/\s+/g, '_')
@@ -93,8 +97,3 @@ function formatForFilename(input: string): string {
 
   return truncatedString;
 }
-
-// Example usage:
-const originalString = 'Example: Filename?*<>|"/\\.';
-const safeFilename = formatForFilename(originalString);
-console.log(safeFilename); // Output: "Example_Filename"
