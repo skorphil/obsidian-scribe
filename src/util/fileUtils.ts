@@ -1,6 +1,7 @@
 import { moment, normalizePath, type TFile } from 'obsidian';
 
 import type ScribePlugin from 'src';
+import type { LLMSummary } from './openAiUtils';
 
 export async function saveAudioRecording(
   recordingBuffer: ArrayBuffer,
@@ -29,24 +30,33 @@ export async function saveNoteWithTranscript(
   plugin: ScribePlugin,
   rawTextForNote: {
     transcript: string;
-
-    llmSummary: { summary: string; title: string };
+    llmSummary: LLMSummary;
   },
   audioFile: TFile,
 ) {
   const now = moment();
   const { transcript, llmSummary } = rawTextForNote;
-  const { summary, title } = llmSummary;
+  const { summary, title, insights, mermaidChart } = llmSummary;
 
-  const fileName = `scribe-${title}-${now.format('YYYY-MM-DD.HH.mm.ss')}`;
+  const formattedTitle = formatForFilename(title);
+  const fileName = `scribe-${formattedTitle}-${now.format('YYYY-MM-DD.HH.mm.ss')}`;
   const pathToSave = plugin.settings.transcriptDirectory;
   const fullPath = `${pathToSave}/${fileName}.md`;
 
   const notePath = normalizePath(fullPath);
 
   const noteContent = `![[${audioFile.path}]]
-# Summary
+# Scribe
+## Summary
 ${summary}
+
+## Insights
+${insights}
+
+## Mermaid Chart
+\`\`\`mermaid
+${mermaidChart}
+\`\`\`
 
 # Transcript
 ${transcript}
@@ -63,3 +73,28 @@ ${transcript}
     console.error('Failed to save file', error);
   }
 }
+
+function formatForFilename(input: string): string {
+  // Remove problematic characters
+  const safeString = input
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+    // Optional: Replace spaces with underscores or another preferred character
+    .replace(/\s+/g, '_')
+    // Avoid trailing periods or spaces which Windows does not like
+    .replace(/\.*\s*$/, '');
+
+  // Truncate to 255 characters to ensure compatibility
+  // This limit is chosen based on common filesystem limits
+  const maxLength = 255;
+  const truncatedString =
+    safeString.length > maxLength
+      ? safeString.substring(0, maxLength)
+      : safeString;
+
+  return truncatedString;
+}
+
+// Example usage:
+const originalString = 'Example: Filename?*<>|"/\\.';
+const safeFilename = formatForFilename(originalString);
+console.log(safeFilename); // Output: "Example_Filename"

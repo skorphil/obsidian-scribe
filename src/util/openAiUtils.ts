@@ -84,6 +84,12 @@ const MODELS: string[] = [
   'gpt-4o-mini',
 ];
 
+export interface LLMSummary {
+  summary: string;
+  title: string;
+  insights: string;
+  mermaidChart: string;
+}
 export async function handleTranscriptSummary(
   openAiKey: string,
   transcript: string,
@@ -93,24 +99,17 @@ export async function handleTranscriptSummary(
   The following is a transcription of recording of someone talking aloud or people in a conversation. 
   There may be a lot of random things said given fluidity of conversation or thought process and the microphone's ability to pick up all audio.  
 
-  Give me detailed notes in markdown language on what was said in the most easy-to-understand, succinct, and conceptual format.  
-
-  Include any helpful information that can conceptualize the notes further or enhance the ideas, and then summarize what was said.  
-
-  Do not mention "the speaker" anywhere in your response.  
-  The notes your write should be written as if I were writting them. 
-
-  Come up with a good note title for the summary
-  Finally, ensure to end with code for a mermaid chart that shows an enlightening concept map combining both the transcription and the information you added to it.  
-
-  You must always output a JSON object with the following shape
-  {
-  summary: string,
-  suggestedNoteTitle: string
-  }
-
-  The summary will include everything I've asked
-  The suggestedNoteTitle will be a good title for the note
+  Give me notes in Markdown language on what was said, they should be
+  - Easy to understand
+  - Succinct
+  - Clean
+  - Logical
+  - Insightful
+  It will be nested under a h1 # tag, so have no other headers that are greater than or equal to a h2 ## 
+  Rules:
+  - You do not need to include escaped new line characters
+  - Do not mention "the speaker" anywhere in your response.  
+  - The notes your write should be written as if I were writting them. 
 
   The following is the transcribed audio:
   <transcript>
@@ -120,21 +119,33 @@ export async function handleTranscriptSummary(
   
   `;
   const model = new ChatOpenAI({
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     apiKey: openAiKey,
     temperature: 0.5,
-    modelKwargs: {
-      response_format: { type: 'json_object' },
-    },
   });
   const messages = [new SystemMessage(systemPrompt)];
   const parser = new JsonOutputParser();
 
   const noteSummary = z.object({
-    summary: z
+    summary: z.string().describe(
+      `A summary of the transcript in Markdown.  It will be nested under a h1 # tag, so have no other headers that are greater than or equal to a h2 ## 
+      The Summary will consist of three sections, you will make these sections in Markdown
+      Create the following three sections in Markdown, <Summary>, <Insights>, <Mermaid Chart>
+        1. <Summary> Concise bullet points containing the primary points of the speaker
+        2. <Insights> A brief section on what insights and enhancements you think came through for what was said
+        3. <Marmaid Chart> A mermaid chart that shows a concept map consisting of both what insights you had along with what the speaker said
+        `,
+    ),
+    insights: z.string().describe(
+      `Insights that you gained from the transcript.
+        A brief section, a paragraph or two on what insights and enhancements you think of
+        Several bullet points on things you think would be an improvement
+        `,
+    ),
+    mermaidChart: z
       .string()
       .describe(
-        'A summary of the transcript in Markdown.  It will be nested under a h1 # tag, so have no other headers that are greater than or equal to a h2 ##',
+        'A mermaid chart that shows a concept map consisting of both what insights you had along with what the speaker said for the mermaid chart, dont wrap it in anything, just output the mermaid chart',
       ),
     title: z
       .string()
@@ -143,10 +154,7 @@ export async function handleTranscriptSummary(
       ),
   });
   const structuredLlm = model.withStructuredOutput(noteSummary);
-  const result = (await structuredLlm.invoke(messages)) as {
-    summary: string;
-    title: string;
-  };
+  const result = (await structuredLlm.invoke(messages)) as LLMSummary;
 
   console.log(result);
 

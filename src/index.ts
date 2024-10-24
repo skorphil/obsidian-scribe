@@ -14,6 +14,7 @@ import {
   handleAudioTranscription,
   handleTranscriptSummary,
   initOpenAiClient,
+  type LLMSummary,
 } from './util/openAiUtils';
 import { ScribeControlsModal } from './modal/scribeControlsModal';
 
@@ -135,7 +136,7 @@ export default class ScribePlugin extends Plugin {
   private async handleTranscriptNoteCreation(
     rawTextForNote: {
       transcript: string;
-      llmSummary: { summary: string; title: string };
+      llmSummary: LLMSummary;
     },
     recordingFile: TFile,
   ) {
