@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile, moment } from 'obsidian';
+import { Notice, Plugin, type TFile } from 'obsidian';
 import {
   DEFAULT_SETTINGS,
   handleSettingsTab,
@@ -10,7 +10,11 @@ import { getDefaultPathSettings } from './util/pathUtils';
 import { AudioRecord } from './audioRecord/audioRecord';
 import { saveAudioRecording, saveNoteWithTranscript } from './util/fileUtils';
 import type OpenAI from 'openai';
-import { handleAudioTranscription, initOpenAiClient } from './util/openAiUtils';
+import {
+  handleAudioTranscription,
+  handleTranscriptSummary,
+  initOpenAiClient,
+} from './util/openAiUtils';
 import { ScribeControlsModal } from './modal/scribeControlsModal';
 
 interface ScribeState {
@@ -102,8 +106,6 @@ export default class ScribePlugin extends Plugin {
       );
       return;
     }
-    console.log('Stop Recording', this.state.audioRecord);
-
     const { recordingBuffer, recordingFile } =
       await this.handleAudioRecordingSave(this.state.audioRecord);
     if (this.state.openAiClient) {
@@ -111,7 +113,19 @@ export default class ScribePlugin extends Plugin {
         this.state.openAiClient,
         recordingBuffer,
       );
-      await this.handleTranscriptNoteCreation(transcript, recordingFile);
+
+      const llmSummary = await handleTranscriptSummary(
+        this.settings.openAiApiKey,
+        transcript,
+      );
+
+      const rawTextForNote = {
+        transcript,
+        llmSummary,
+      };
+
+      await this.handleTranscriptNoteCreation(rawTextForNote, recordingFile);
+
       this.controlModal.close();
     }
 
@@ -119,12 +133,12 @@ export default class ScribePlugin extends Plugin {
   }
 
   private async handleTranscriptNoteCreation(
-    transcript: string,
+    rawTextForNote: { transcript: string; llmSummary: string },
     recordingFile: TFile,
   ) {
     const noteWithTranscript = await saveNoteWithTranscript(
       this,
-      transcript,
+      rawTextForNote,
       recordingFile,
     );
 
