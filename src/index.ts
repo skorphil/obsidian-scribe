@@ -133,7 +133,10 @@ export default class ScribePlugin extends Plugin {
   }
 
   private async handleTranscriptNoteCreation(
-    rawTextForNote: { transcript: string; llmSummary: string },
+    rawTextForNote: {
+      transcript: string;
+      llmSummary: { summary: string; title: string };
+    },
     recordingFile: TFile,
   ) {
     const noteWithTranscript = await saveNoteWithTranscript(

@@ -27,13 +27,18 @@ export async function saveAudioRecording(
 
 export async function saveNoteWithTranscript(
   plugin: ScribePlugin,
-  rawTextForNote: { transcript: string; llmSummary: string },
+  rawTextForNote: {
+    transcript: string;
+
+    llmSummary: { summary: string; title: string };
+  },
   audioFile: TFile,
 ) {
   const now = moment();
   const { transcript, llmSummary } = rawTextForNote;
+  const { summary, title } = llmSummary;
 
-  const fileName = `scribe-${now.format('YYYY-MM-DD.HH.mm.ss')}`;
+  const fileName = `scribe-${title}-${now.format('YYYY-MM-DD.HH.mm.ss')}`;
   const pathToSave = plugin.settings.transcriptDirectory;
   const fullPath = `${pathToSave}/${fileName}.md`;
 
@@ -41,7 +46,7 @@ export async function saveNoteWithTranscript(
 
   const noteContent = `![[${audioFile.path}]]
 # Summary
-${llmSummary}
+${summary}
 
 # Transcript
 ${transcript}

@@ -7,8 +7,10 @@ import OpenAI from 'openai';
 import audioDataToChunkedFiles from './audioDataToChunkedFiles';
 import type { FileLike } from 'openai/uploads';
 import { ChatOpenAI } from '@langchain/openai';
+import { z } from 'zod';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { StringOutputParser } from '@langchain/core/output_parsers';
+
+import { JsonOutputParser } from '@langchain/core/output_parsers';
 
 const MAX_CHUNK_SIZE = 25 * 1024 * 1024;
 
@@ -90,21 +92,63 @@ export async function handleTranscriptSummary(
   You are an expert note-making AI for obsidian who specializes in the Linking Your Thinking (LYK) strategy.  
   The following is a transcription of recording of someone talking aloud or people in a conversation. 
   There may be a lot of random things said given fluidity of conversation or thought process and the microphone's ability to pick up all audio.  
-  Give me detailed notes in markdown language on what was said in the most easy-to-understand, detailed, and conceptual format.  
+
+  Give me detailed notes in markdown language on what was said in the most easy-to-understand, succinct, and conceptual format.  
+
   Include any helpful information that can conceptualize the notes further or enhance the ideas, and then summarize what was said.  
+
   Do not mention "the speaker" anywhere in your response.  
   The notes your write should be written as if I were writting them. 
+
+  Come up with a good note title for the summary
   Finally, ensure to end with code for a mermaid chart that shows an enlightening concept map combining both the transcription and the information you added to it.  
+
+  You must always output a JSON object with the following shape
+  {
+  summary: string,
+  suggestedNoteTitle: string
+  }
+
+  The summary will include everything I've asked
+  The suggestedNoteTitle will be a good title for the note
+
   The following is the transcribed audio:
   <transcript>
   ${transcript}
   </transcript>
+
+  
   `;
-  const model = new ChatOpenAI({ model: 'gpt-4o', apiKey: openAiKey });
+  const model = new ChatOpenAI({
+    model: 'gpt-4o',
+    apiKey: openAiKey,
+    temperature: 0.5,
+    modelKwargs: {
+      response_format: { type: 'json_object' },
+    },
+  });
   const messages = [new SystemMessage(systemPrompt)];
-  const parser = new StringOutputParser();
+  const parser = new JsonOutputParser();
 
-  const result = await model.invoke(messages);
+  const noteSummary = z.object({
+    summary: z
+      .string()
+      .describe(
+        'A summary of the transcript in Markdown.  It will be nested under a h1 # tag, so have no other headers that are greater than or equal to a h2 ##',
+      ),
+    title: z
+      .string()
+      .describe(
+        'A suggested title for the Obsidian Note. Ensure that it is in the proper format for a file on mac, windows and linux',
+      ),
+  });
+  const structuredLlm = model.withStructuredOutput(noteSummary);
+  const result = (await structuredLlm.invoke(messages)) as {
+    summary: string;
+    title: string;
+  };
 
-  return await parser.invoke(result);
+  console.log(result);
+
+  return await result;
 }
