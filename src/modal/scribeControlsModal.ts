@@ -1,4 +1,4 @@
-import { Modal, Notice } from 'obsidian';
+import { Modal, Notice, setIcon } from 'obsidian';
 import type ScribePlugin from 'src';
 
 /**
@@ -30,6 +30,11 @@ export class ScribeControlsModal extends Modal {
   onClose() {
     const { contentEl } = this;
     contentEl.empty();
+
+    if (this.plugin.state.isRecording) {
+      new Notice('Scribe: 🛑 Recording Cancelled');
+      this.plugin.state.audioRecord?.stopRecording();
+    }
     this.plugin.state.isOpen = false;
     this.plugin.state.isRecording = false;
     this.handleStopwatch(contentEl, false);
@@ -56,26 +61,38 @@ export class ScribeControlsModal extends Modal {
     const controlGroup = controlGroupWrapper.createDiv({
       cls: 'scribe-controls-modal-control-group',
     });
-
-    const deleteButton = controlGroup.createEl('button');
-    deleteButton.setText('Delete');
-
+    const deleteButton = controlGroup.createEl('button', {
+      cls: 'scribe-control-cancel-btn',
+    });
     const recordButton = controlGroup.createEl('button', {
       cls: 'scribe-control-record-btn',
     });
     recordButton.setText('Record');
+    setIcon(recordButton, 'mic-vocal');
 
     recordButton.addEventListener('click', async () => {
       const updatedRecordingState = !this.plugin.state.isRecording;
       this.updateRecordingState(contentEl, updatedRecordingState);
       this.handleStopwatch(contentEl, updatedRecordingState);
       this.handleRecording(updatedRecordingState);
+      this.updateRender(contentEl, updatedRecordingState);
     });
 
     deleteButton.addEventListener('click', async () => {
-      new Notice('Scribe: 🛑 Recording Deleted');
       this.close();
     });
+
+    this.updateRender(contentEl, this.plugin.state.isRecording);
+  }
+
+  updateRender(container: HTMLElement, isRecording: boolean) {
+    const controlGroup = container.find('.scribe-controls-modal-control-group');
+    const cancelBtn = controlGroup.find('.scribe-control-cancel-btn');
+    if (isRecording) {
+      cancelBtn.setText('Cancel');
+    } else {
+      cancelBtn.setText('');
+    }
   }
 
   updateRecordingState(container: HTMLElement, isRecording: boolean) {

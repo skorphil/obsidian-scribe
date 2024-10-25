@@ -1,4 +1,5 @@
 import { Notice, Plugin, type TFile } from 'obsidian';
+import type OpenAI from 'openai';
 import {
   DEFAULT_SETTINGS,
   handleSettingsTab,
@@ -9,13 +10,16 @@ import { handleCommands } from './commands/commands';
 import { getDefaultPathSettings } from './util/pathUtils';
 import { AudioRecord } from './audioRecord/audioRecord';
 import { saveAudioRecording, saveNoteWithTranscript } from './util/fileUtils';
-import type OpenAI from 'openai';
 import {
   chunkAndTranscribeAudioBuffer,
   summarizeTranscript,
   type LLMSummary,
 } from './util/openAiUtils';
 import { ScribeControlsModal } from './modal/scribeControlsModal';
+import {
+  mimeTypeToFileExtension,
+  type SupportedMimeType,
+} from './util/mimeType';
 
 interface ScribeState {
   isOpen: boolean;
@@ -49,11 +53,9 @@ export default class ScribePlugin extends Plugin {
      */
     this.app.workspace.onLayoutReady(async () => {
       await this.loadSettings();
-
       handleRibbon(this);
       handleCommands(this);
       handleSettingsTab(this);
-
       this.controlModal = new ScribeControlsModal(this);
     });
   }
@@ -97,7 +99,7 @@ export default class ScribePlugin extends Plugin {
 
   async scribe() {
     const { recordingBuffer, recordingFile } =
-      await this.stopAndSaveRecording();
+      await this.handleStopAndSaveRecording();
     const transcript = await this.handleAudioTranscription(recordingBuffer);
     const llmSummary = await this.handleTranscriptSummary(transcript);
 
@@ -111,7 +113,26 @@ export default class ScribePlugin extends Plugin {
     this.state.audioRecord = null;
   }
 
-  async stopAndSaveRecording() {
+  async scribeExistingFile(file: TFile) {
+    if (
+      !mimeTypeToFileExtension(`audio/${file.extension}` as SupportedMimeType)
+    ) {
+      new Notice('Scribe: ⚠️ This File type is not supported');
+      return;
+    }
+
+    const fileBuffer = await this.app.vault.readBinary(file);
+    const transcript = await this.handleAudioTranscription(fileBuffer);
+    const llmSummary = await this.handleTranscriptSummary(transcript);
+
+    await this.handleFinalNoteCreation({ transcript, llmSummary }, file);
+
+    this.controlModal.close();
+
+    this.state.audioRecord = null;
+  }
+
+  async handleStopAndSaveRecording() {
     const audioRecord = this.state.audioRecord as AudioRecord;
 
     const audioBlob = await audioRecord.stopRecording();
