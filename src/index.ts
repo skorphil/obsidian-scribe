@@ -118,6 +118,7 @@ export default class ScribePlugin extends Plugin {
       const llmSummary = await handleTranscriptSummary(
         this.settings.openAiApiKey,
         transcript,
+        this.settings.llmModel,
       );
 
       const rawTextForNote = {
