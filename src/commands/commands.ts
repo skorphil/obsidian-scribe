@@ -2,6 +2,12 @@ import { type Editor, MarkdownView } from 'obsidian';
 import type ScribePlugin from 'src';
 import { ScribeControlsModal } from 'src/modal/scribeControlsModal';
 
+/**
+ * I then want a command for each component when a file is open
+ * Scribe Transcribe + Summarize (Whole thing, but in that file)
+ * Create Transcript
+ * Create Summary
+ */
 export function handleCommands(plugin: ScribePlugin) {
   // This adds a simple command that can be triggered anywhere
   plugin.addCommand({

@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
 import { JsonOutputParser } from '@langchain/core/output_parsers';
+import { Notice } from 'obsidian';
 
 export enum LLM_MODELS {
   'gpt-4o-mini' = 'gpt-4o-mini',
@@ -20,31 +21,21 @@ export enum LLM_MODELS {
 
 const MAX_CHUNK_SIZE = 25 * 1024 * 1024;
 
-export function initOpenAiClient(apiKey: string) {
-  return new OpenAI({
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true,
-  });
-}
-
-export async function handleAudioTranscription(
-  openAiClient: OpenAI,
+export async function chunkAndTranscribeAudioBuffer(
+  openAiKey: string,
   audioBuffer: ArrayBuffer,
 ) {
+  const openAiClient = new OpenAI({
+    apiKey: openAiKey,
+    dangerouslyAllowBrowser: true,
+  });
   const audioFiles = await audioDataToChunkedFiles(audioBuffer, MAX_CHUNK_SIZE);
+  new Notice(`Scribe: 🎧 Transcribing ${audioFiles.length} Files`);
 
-  console.log('Chunked File', audioFiles);
-
-  const transcript = transcribeAudio(openAiClient, {
+  const transcript = await transcribeAudio(openAiClient, {
     audioFiles,
-    onChunkStart: (i, total) => {
-      let message = 'Scribe: Beginning Transcript';
-      if (total > 1) message += ` ${i + 1}/${total}`;
-      console.log(message);
-    },
   });
 
-  console.log('Transcribed File', transcript);
   return transcript;
 }
 
@@ -55,12 +46,12 @@ export async function handleAudioTranscription(
  * concatenating the results.
  */
 
-export interface TranscriptionOptions {
+interface TranscriptionOptions {
   audioFiles: FileLike[];
   onChunkStart?: (i: number, totalChunks: number) => void;
 }
 
-export default async function transcribeAudio(
+async function transcribeAudio(
   client: OpenAI,
   { audioFiles, onChunkStart }: TranscriptionOptions,
 ): Promise<string> {
@@ -83,7 +74,7 @@ export interface LLMSummary {
   insights: string;
   mermaidChart: string;
 }
-export async function handleTranscriptSummary(
+export async function summarizeTranscript(
   openAiKey: string,
   transcript: string,
   llmModel: LLM_MODELS = LLM_MODELS['gpt-4o'],

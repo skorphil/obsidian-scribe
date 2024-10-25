@@ -11,9 +11,8 @@ import { AudioRecord } from './audioRecord/audioRecord';
 import { saveAudioRecording, saveNoteWithTranscript } from './util/fileUtils';
 import type OpenAI from 'openai';
 import {
-  handleAudioTranscription,
-  handleTranscriptSummary,
-  initOpenAiClient,
+  chunkAndTranscribeAudioBuffer,
+  summarizeTranscript,
   type LLMSummary,
 } from './util/openAiUtils';
 import { ScribeControlsModal } from './modal/scribeControlsModal';
@@ -67,10 +66,6 @@ export default class ScribePlugin extends Plugin {
 
     const defaultPathSettings = await getDefaultPathSettings(this);
 
-    if (this.settings.openAiApiKey) {
-      this.state.openAiClient = initOpenAiClient(this.settings.openAiApiKey);
-    }
-
     if (!this.settings.openAiApiKey) {
       console.error(
         'OpenAI Api key is needed in Scribes settings - https://platform.openai.com/settings',
@@ -93,48 +88,65 @@ export default class ScribePlugin extends Plugin {
   }
 
   async startRecording() {
-    console.log('start Recording:', this.state.audioRecord);
+    new Notice('Scribe: 🎙️ Recording Started');
     const newRecording = new AudioRecord();
     this.state.audioRecord = newRecording;
 
     newRecording.startRecording();
   }
 
-  async stopRecording() {
-    if (!this.state.audioRecord) {
-      console.error(
-        'Stop recording fired without an audioRecord, we are in a weird state',
-      );
-      return;
-    }
+  async scribe() {
     const { recordingBuffer, recordingFile } =
-      await this.handleAudioRecordingSave(this.state.audioRecord);
-    if (this.state.openAiClient) {
-      const transcript = await handleAudioTranscription(
-        this.state.openAiClient,
-        recordingBuffer,
-      );
+      await this.stopAndSaveRecording();
+    const transcript = await this.handleAudioTranscription(recordingBuffer);
+    const llmSummary = await this.handleTranscriptSummary(transcript);
 
-      const llmSummary = await handleTranscriptSummary(
-        this.settings.openAiApiKey,
-        transcript,
-        this.settings.llmModel,
-      );
+    await this.handleFinalNoteCreation(
+      { transcript, llmSummary },
+      recordingFile,
+    );
 
-      const rawTextForNote = {
-        transcript,
-        llmSummary,
-      };
-
-      await this.handleTranscriptNoteCreation(rawTextForNote, recordingFile);
-
-      this.controlModal.close();
-    }
+    this.controlModal.close();
 
     this.state.audioRecord = null;
   }
 
-  private async handleTranscriptNoteCreation(
+  async stopAndSaveRecording() {
+    const audioRecord = this.state.audioRecord as AudioRecord;
+
+    const audioBlob = await audioRecord.stopRecording();
+    const recordingBuffer = await audioBlob.arrayBuffer();
+
+    const recordingFile = await saveAudioRecording(this, recordingBuffer);
+    new Notice(`Scribe: ✅ Audio File saved ${recordingFile.name}`);
+
+    return { recordingBuffer, recordingFile };
+  }
+
+  async handleAudioTranscription(audioBuffer: ArrayBuffer) {
+    new Notice('Scribe: 🎧 Beginning Transcription');
+    const transcript = await chunkAndTranscribeAudioBuffer(
+      this.settings.openAiApiKey,
+      audioBuffer,
+    );
+    new Notice('Scribe: 🎧 Transcription Complete');
+
+    return transcript;
+  }
+
+  async handleTranscriptSummary(transcript: string) {
+    new Notice('Scribe: 🧠 Sending to LLM to Summarize');
+    const llmSummary = await summarizeTranscript(
+      this.settings.openAiApiKey,
+      transcript,
+      this.settings.llmModel,
+    );
+    new Notice('Scribe: 🧠 LLM Summation complete');
+
+    return llmSummary;
+  }
+
+  private async handleFinalNoteCreation(
     rawTextForNote: {
       transcript: string;
       llmSummary: LLMSummary;
@@ -155,13 +167,5 @@ export default class ScribePlugin extends Plugin {
         true,
       );
     }
-  }
-
-  private async handleAudioRecordingSave(audioRecord: AudioRecord) {
-    const recordingBlob = await audioRecord.stopRecording();
-    const recordingBuffer = await recordingBlob.arrayBuffer();
-
-    const recordingFile = await saveAudioRecording(recordingBuffer, this);
-    return { recordingFile, recordingBuffer };
   }
 }

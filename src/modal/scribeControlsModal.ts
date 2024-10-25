@@ -1,11 +1,20 @@
-import { clearInterval, setInterval } from 'timers';
 import { Modal, Notice } from 'obsidian';
 import type ScribePlugin from 'src';
+
+/**
+ * Essentially what I want is the following
+ * Save the AudioFile - Display it's location
+ * Begin Transcript - Show Status (Idle, In Progress, Done)
+ * Create Note - File + Transcript - Display Location
+ * Create LLM Summary - Show Status (Idle, In Progress, Done)
+ * Rename File based on output
+ * Open file
+ */
 
 export class ScribeControlsModal extends Modal {
   plugin: ScribePlugin;
   private startTime: number;
-  private stopwatchInterval: NodeJS.Timer;
+  private stopwatchInterval: number;
   private elapsedTime: number;
 
   constructor(plugin: ScribePlugin) {
@@ -14,7 +23,6 @@ export class ScribeControlsModal extends Modal {
   }
 
   onOpen() {
-    console.log('Plugin State from Modal:', this.plugin.state);
     this.plugin.state.isOpen = true;
     this.initModal();
   }
@@ -65,7 +73,7 @@ export class ScribeControlsModal extends Modal {
     });
 
     deleteButton.addEventListener('click', async () => {
-      new Notice('Scribe: Recording Deleted');
+      new Notice('Scribe: 🛑 Recording Deleted');
       this.close();
     });
   }
@@ -74,11 +82,9 @@ export class ScribeControlsModal extends Modal {
     this.plugin.state.isRecording = isRecording;
     const recordBtnEl = container.find('.scribe-control-record-btn');
     if (isRecording) {
-      new Notice('Scribe: Recording Started');
       recordBtnEl.setText('Save');
     } else {
       recordBtnEl.setText('Record');
-      new Notice('Scribe: Recording Saved');
     }
   }
 
@@ -94,7 +100,7 @@ export class ScribeControlsModal extends Modal {
     if (isRecording) {
       this.plugin.startRecording();
     } else {
-      this.plugin.stopRecording();
+      this.plugin.scribe();
     }
   }
 
@@ -102,7 +108,7 @@ export class ScribeControlsModal extends Modal {
     const counterText = container.find('.scribe-modal-info-counter-span');
     this.startTime = Date.now();
     console.log('start stopwatch');
-    this.stopwatchInterval = setInterval(() => {
+    this.stopwatchInterval = window.setInterval(() => {
       console.log('interval');
       this.elapsedTime = Date.now() - this.startTime;
       counterText.setText(`Counter: ${formatTime(this.elapsedTime)}`);
@@ -110,7 +116,7 @@ export class ScribeControlsModal extends Modal {
   }
 
   stopStopwatch() {
-    clearInterval(this.stopwatchInterval);
+    window.clearInterval(this.stopwatchInterval);
   }
 }
 

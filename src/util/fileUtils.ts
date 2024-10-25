@@ -4,8 +4,8 @@ import type ScribePlugin from 'src';
 import type { LLMSummary } from './openAiUtils';
 
 export async function saveAudioRecording(
-  recordingBuffer: ArrayBuffer,
   plugin: ScribePlugin,
+  recordingBuffer: ArrayBuffer,
 ) {
   const now = moment();
 
