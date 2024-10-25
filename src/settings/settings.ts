@@ -1,16 +1,19 @@
 import { type App, PluginSettingTab, Setting } from 'obsidian';
 import type ScribePlugin from 'src';
+import { LLM_MODELS } from 'src/util/openAiUtils';
 
 export interface ScribePluginSettings {
   openAiApiKey: string;
   recordingDirectory: string;
   transcriptDirectory: string;
+  llmModel: LLM_MODELS;
 }
 
 export const DEFAULT_SETTINGS: ScribePluginSettings = {
   openAiApiKey: '',
   recordingDirectory: '',
   transcriptDirectory: '',
+  llmModel: LLM_MODELS['gpt-4o'],
 };
 
 export async function handleSettingsTab(plugin: ScribePlugin) {
@@ -73,6 +76,20 @@ export class ScribeSettingsTab extends PluginSettingTab {
         component.onChange(async (value) => {
           console.log('onChange value:', value);
           this.plugin.settings.transcriptDirectory = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName('LLM Model for creating the Summary')
+      .addDropdown((component) => {
+        for (const model of Object.keys(LLM_MODELS)) {
+          component.addOption(model, model);
+        }
+        component.setValue(this.plugin.settings.llmModel);
+        component.onChange(async (value: LLM_MODELS) => {
+          console.log('onChange value:', value);
+          this.plugin.settings.llmModel = value;
           await this.plugin.saveSettings();
         });
       });

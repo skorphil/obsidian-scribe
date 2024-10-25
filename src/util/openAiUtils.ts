@@ -12,6 +12,12 @@ import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
 import { JsonOutputParser } from '@langchain/core/output_parsers';
 
+export enum LLM_MODELS {
+  'gpt-4o-mini' = 'gpt-4o-mini',
+  'gpt-4o' = 'gpt-4o',
+  'gpt-4-turbo' = 'gpt-4-turbo',
+}
+
 const MAX_CHUNK_SIZE = 25 * 1024 * 1024;
 
 export function initOpenAiClient(apiKey: string) {
@@ -71,19 +77,6 @@ export default async function transcribeAudio(
   return transcript;
 }
 
-const MODELS: string[] = [
-  'gpt-3.5-turbo-16k',
-  'gpt-3.5-turbo-0613',
-  'text-davinci-003',
-  'text-davinci-002',
-  'code-davinci-002',
-  'code-davinci-001',
-  'gpt-4-0613',
-  'gpt-4-32k-0613',
-  'gpt-4o',
-  'gpt-4o-mini',
-];
-
 export interface LLMSummary {
   summary: string;
   title: string;
@@ -93,6 +86,7 @@ export interface LLMSummary {
 export async function handleTranscriptSummary(
   openAiKey: string,
   transcript: string,
+  llmModel: LLM_MODELS = LLM_MODELS['gpt-4o'],
 ) {
   const systemPrompt = `
   You are an expert note-making AI for obsidian who specializes in the Linking Your Thinking (LYK) strategy.  
@@ -119,7 +113,7 @@ export async function handleTranscriptSummary(
   
   `;
   const model = new ChatOpenAI({
-    model: 'gpt-4o-mini',
+    model: llmModel,
     apiKey: openAiKey,
     temperature: 0.5,
   });
