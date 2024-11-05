@@ -41,7 +41,6 @@ export class ScribeControlsModal extends Modal {
   }
 
   initModal() {
-    console.log('init modal');
     const { contentEl } = this;
     contentEl.innerHTML = '';
 
@@ -129,9 +128,7 @@ export class ScribeControlsModal extends Modal {
   startStopwatch(container: HTMLElement) {
     const counterText = container.find('.scribe-modal-info-counter-span');
     this.startTime = Date.now();
-    console.log('start stopwatch');
     this.stopwatchInterval = window.setInterval(() => {
-      console.log('interval');
       this.elapsedTime = Date.now() - this.startTime;
       counterText.setText(`${formatTime(this.elapsedTime)}`);
     }, 1000);
