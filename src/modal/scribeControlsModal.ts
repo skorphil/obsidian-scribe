@@ -56,18 +56,17 @@ export class ScribeControlsModal extends Modal {
     const counterText = infoGroup.createEl('span', {
       cls: 'scribe-modal-info-counter-span',
     });
-    counterText.setText('Counter: 00:00');
+    counterText.setText('00:00');
 
     const controlGroup = controlGroupWrapper.createDiv({
       cls: 'scribe-controls-modal-control-group',
     });
-    const deleteButton = controlGroup.createEl('button', {
-      cls: 'scribe-control-cancel-btn',
+    const cancelButtonWrapper = controlGroup.createEl('div', {
+      cls: 'scribe-control-cancel-btn-wrapper',
     });
     const recordButton = controlGroup.createEl('button', {
       cls: 'scribe-control-record-btn',
     });
-    recordButton.setText('Record');
     setIcon(recordButton, 'mic-vocal');
 
     recordButton.addEventListener('click', async () => {
@@ -78,20 +77,26 @@ export class ScribeControlsModal extends Modal {
       this.updateRender(contentEl, updatedRecordingState);
     });
 
-    deleteButton.addEventListener('click', async () => {
-      this.close();
-    });
-
     this.updateRender(contentEl, this.plugin.state.isRecording);
   }
 
   updateRender(container: HTMLElement, isRecording: boolean) {
     const controlGroup = container.find('.scribe-controls-modal-control-group');
-    const cancelBtn = controlGroup.find('.scribe-control-cancel-btn');
+    const cancelBtnWrapper = controlGroup.find(
+      '.scribe-control-cancel-btn-wrapper',
+    );
     if (isRecording) {
+      const cancelBtn = cancelBtnWrapper.createEl('button', {
+        cls: 'scribe-control-cancel-btn',
+      });
+      cancelBtn.addEventListener('click', async () => {
+        this.close();
+      });
+
       cancelBtn.setText('Cancel');
+      setIcon(cancelBtn, 'trash-2');
     } else {
-      cancelBtn.setText('');
+      cancelBtnWrapper.empty();
     }
   }
 
@@ -99,9 +104,9 @@ export class ScribeControlsModal extends Modal {
     this.plugin.state.isRecording = isRecording;
     const recordBtnEl = container.find('.scribe-control-record-btn');
     if (isRecording) {
-      recordBtnEl.setText('Save');
+      setIcon(recordBtnEl, 'circle-stop');
     } else {
-      recordBtnEl.setText('Record');
+      setIcon(recordBtnEl, 'mic-vocal');
     }
   }
 
@@ -128,7 +133,7 @@ export class ScribeControlsModal extends Modal {
     this.stopwatchInterval = window.setInterval(() => {
       console.log('interval');
       this.elapsedTime = Date.now() - this.startTime;
-      counterText.setText(`Counter: ${formatTime(this.elapsedTime)}`);
+      counterText.setText(`${formatTime(this.elapsedTime)}`);
     }, 1000);
   }
 

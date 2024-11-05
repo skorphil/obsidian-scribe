@@ -6,6 +6,10 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+.scribe-controls-modal-control-group {
+  display: flex;
+  flex-direction: row;
+}
 .scribe-control-record-btn {
   --icon-size: var(--icon-size-lg);
   background-color: red;
