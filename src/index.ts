@@ -1,4 +1,4 @@
-import { Notice, Plugin, type TFile } from 'obsidian';
+import { Notice, Plugin, type TFile, moment } from 'obsidian';
 import type OpenAI from 'openai';
 import {
   DEFAULT_SETTINGS,
@@ -9,7 +9,16 @@ import { handleRibbon } from './ribbon/ribbon';
 import { handleCommands } from './commands/commands';
 import { getDefaultPathSettings } from './util/pathUtils';
 import { AudioRecord } from './audioRecord/audioRecord';
-import { saveAudioRecording, saveNoteWithTranscript } from './util/fileUtils';
+import {
+  addAudioSourceToFrontmatter,
+  addSummaryToNote,
+  addTranscriptToNote,
+  createBaseFileName,
+  createNewNote,
+  formatForFilename,
+  renameFile,
+  saveAudioRecording,
+} from './util/fileUtils';
 import {
   chunkAndTranscribeAudioBuffer,
   summarizeTranscript,
@@ -43,8 +52,6 @@ export default class ScribePlugin extends Plugin {
   controlModal: ScribeControlsModal;
 
   async onload() {
-    console.log(`Reloaded Scribe: ${new Date().toDateString()}`);
-
     /**
      * Ensures that Obsidian is fully bootstrapped before plugging in.
      * Helps with load time
@@ -98,47 +105,74 @@ export default class ScribePlugin extends Plugin {
   }
 
   async scribe() {
+    const baseFileName = createBaseFileName();
+
     const { recordingBuffer, recordingFile } =
-      await this.handleStopAndSaveRecording();
+      await this.handleStopAndSaveRecording(baseFileName);
+
+    const scribeNoteFilename = `scribe-${baseFileName}`;
+    const note = await createNewNote(this, scribeNoteFilename);
+    await addAudioSourceToFrontmatter(this, note, recordingFile);
+
+    const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
+    this.app.workspace.openLinkText(note?.path, currentPath, true);
+
     const transcript = await this.handleAudioTranscription(recordingBuffer);
+    await addTranscriptToNote(this, note, transcript);
+
     const llmSummary = await this.handleTranscriptSummary(transcript);
+    await addSummaryToNote(this, note, llmSummary);
 
-    await this.handleFinalNoteCreation(
-      { transcript, llmSummary },
-      recordingFile,
-    );
+    const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
+    await renameFile(this, note, llmFileName);
 
-    this.controlModal.close();
-
-    this.state.audioRecord = null;
+    this.cleanup();
   }
 
-  async scribeExistingFile(file: TFile) {
+  async scribeExistingFile(audioFile: TFile) {
     if (
-      !mimeTypeToFileExtension(`audio/${file.extension}` as SupportedMimeType)
+      !mimeTypeToFileExtension(
+        `audio/${audioFile.extension}` as SupportedMimeType,
+      )
     ) {
       new Notice('Scribe: ⚠️ This File type is not supported');
       return;
     }
 
-    const fileBuffer = await this.app.vault.readBinary(file);
-    const transcript = await this.handleAudioTranscription(fileBuffer);
+    const audioFileBuffer = await this.app.vault.readBinary(audioFile);
+
+    const baseFileName = createBaseFileName();
+    const scribeNoteFilename = `scribe-${baseFileName}`;
+
+    const note = await createNewNote(this, scribeNoteFilename);
+    await addAudioSourceToFrontmatter(this, note, audioFile);
+
+    const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
+    this.app.workspace.openLinkText(note?.path, currentPath, true);
+
+    const transcript = await this.handleAudioTranscription(audioFileBuffer);
+    await addTranscriptToNote(this, note, transcript);
+
     const llmSummary = await this.handleTranscriptSummary(transcript);
+    await addSummaryToNote(this, note, llmSummary);
 
-    await this.handleFinalNoteCreation({ transcript, llmSummary }, file);
+    const llmFileName = `scribe-test-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
+    await renameFile(this, note, llmFileName);
 
-    this.controlModal.close();
-
-    this.state.audioRecord = null;
+    this.cleanup();
   }
 
-  async handleStopAndSaveRecording() {
+  async handleStopAndSaveRecording(baseFileName: string) {
     const audioRecord = this.state.audioRecord as AudioRecord;
 
     const audioBlob = await audioRecord.stopRecording();
     const recordingBuffer = await audioBlob.arrayBuffer();
 
-    const recordingFile = await saveAudioRecording(this, recordingBuffer);
+    const recordingFile = await saveAudioRecording(
+      this,
+      recordingBuffer,
+      baseFileName,
+    );
     new Notice(`Scribe: ✅ Audio File saved ${recordingFile.name}`);
 
     return { recordingBuffer, recordingFile };
@@ -167,26 +201,8 @@ export default class ScribePlugin extends Plugin {
     return llmSummary;
   }
 
-  private async handleFinalNoteCreation(
-    rawTextForNote: {
-      transcript: string;
-      llmSummary: LLMSummary;
-    },
-    recordingFile: TFile,
-  ) {
-    const noteWithTranscript = await saveNoteWithTranscript(
-      this,
-      rawTextForNote,
-      recordingFile,
-    );
-
-    if (noteWithTranscript) {
-      const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
-      this.app.workspace.openLinkText(
-        noteWithTranscript?.path,
-        currentPath,
-        true,
-      );
-    }
+  cleanup() {
+    this.controlModal.close();
+    this.state.audioRecord = null;
   }
 }
