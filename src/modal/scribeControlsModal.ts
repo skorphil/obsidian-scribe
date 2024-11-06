@@ -1,3 +1,4 @@
+// import ReactDOM from "react-dom/client";
 import { Modal, Notice, setIcon } from 'obsidian';
 import type ScribePlugin from 'src';
 
@@ -42,7 +43,12 @@ export class ScribeControlsModal extends Modal {
 
   initModal() {
     const { contentEl } = this;
+    this.modalEl.addClass('scribe-modal');
     contentEl.innerHTML = '';
+
+    // const reactTestWrapper = contentEl.createDiv({
+    //   cls: 'scribe-controls-modal-react',
+    // });
 
     const controlGroupWrapper = contentEl.createDiv({
       cls: 'scribe-controls-modal-wrapper',
@@ -77,6 +83,9 @@ export class ScribeControlsModal extends Modal {
     });
 
     this.updateRender(contentEl, this.plugin.state.isRecording);
+
+    // const root = ReactDOM
+    // const reactTestWrapper
   }
 
   updateRender(container: HTMLElement, isRecording: boolean) {
