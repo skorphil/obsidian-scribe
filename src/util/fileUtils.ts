@@ -100,12 +100,13 @@ ${SUMMARY_IN_PROGRESS_HEADER}`;
 const SUMMARY_HEADER = '# Summary';
 const INSIGHTS_HEADER = '# Insights';
 const MERMAID_CHART_HEADER = '# Mermaid Chart';
+const ANSWERED_QUESTIONS_HEADER = '# Answers from Scribe';
 export async function addSummaryToNote(
   plugin: ScribePlugin,
   noteFile: TFile,
   llmSummary: LLMSummary,
 ) {
-  const { summary, insights, mermaidChart } = llmSummary;
+  const { summary, insights, mermaidChart, answeredQuestions } = llmSummary;
   try {
     const textToAdd = `
 ${SUMMARY_HEADER}
@@ -113,6 +114,9 @@ ${summary}
 
 ${INSIGHTS_HEADER}
 ${insights}
+
+${answeredQuestions && ANSWERED_QUESTIONS_HEADER}
+${answeredQuestions || ''}
 
 ${MERMAID_CHART_HEADER}
 \`\`\`mermaid

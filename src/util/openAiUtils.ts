@@ -136,6 +136,8 @@ export async function summarizeTranscript(
       .optional()
       .describe(
         `If the user says "Scribe" or alludes to you, asking you to do something, answer the question or do the ask and put the answers here
+        Put the text in markdown, it will be nested under an h1 tag
+        Summarize the question in a short sentence as a header and format the reply nicely below for as many questions as there are
       `,
       ),
     title: z
@@ -146,8 +148,6 @@ export async function summarizeTranscript(
   });
   const structuredLlm = model.withStructuredOutput(noteSummary);
   const result = (await structuredLlm.invoke(messages)) as LLMSummary;
-
-  console.log(result);
 
   return await result;
 }

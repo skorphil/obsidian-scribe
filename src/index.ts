@@ -220,7 +220,6 @@ export default class ScribePlugin extends Plugin {
     try {
       let brokenMermaidChart: string | undefined;
       await this.app.vault.process(file, (data) => {
-        console.log(data);
         brokenMermaidChart = extractMermaidChart(data);
         return data;
       });
@@ -233,13 +232,10 @@ export default class ScribePlugin extends Plugin {
             brokenMermaidChart,
           )
         ).mermaidChart;
-
-        console.log(fixedMermaidChart);
       }
 
       if (brokenMermaidChart && fixedMermaidChart) {
         await this.app.vault.process(file, (data) => {
-          console.log(data);
           brokenMermaidChart = extractMermaidChart(data);
 
           return data.replace(
