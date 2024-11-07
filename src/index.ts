@@ -33,7 +33,6 @@ import {
 interface ScribeState {
   isOpen: boolean;
   counter: number;
-  isRecording: boolean;
   audioRecord: AudioRecord | null;
   openAiClient: OpenAI | null;
 }
@@ -41,7 +40,6 @@ interface ScribeState {
 const DEFAULT_STATE: ScribeState = {
   isOpen: false,
   counter: 0,
-  isRecording: false,
   audioRecord: null,
   openAiClient: null,
 };
@@ -102,6 +100,13 @@ export default class ScribePlugin extends Plugin {
     this.state.audioRecord = newRecording;
 
     newRecording.startRecording();
+  }
+
+  async cancelRecording() {
+    if (this.state.audioRecord?.mediaRecorder) {
+      new Notice('Scribe: 🛑️ Recording Cancelled');
+      await this.state.audioRecord?.stopRecording();
+    }
   }
 
   async scribe() {

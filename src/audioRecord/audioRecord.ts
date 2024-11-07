@@ -36,6 +36,14 @@ export class AudioRecord {
       });
   }
 
+  async pauseRecording() {
+    if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+      console.error('There is no mediaRecorder, cannot stopRecording');
+      throw new Error('There is no mediaRecorder, cannot stopRecording');
+    }
+    this.mediaRecorder?.pause();
+  }
+
   stopRecording() {
     return new Promise<Blob>((resolve) => {
       if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
