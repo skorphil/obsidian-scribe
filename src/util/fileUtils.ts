@@ -66,6 +66,7 @@ ${TRANSCRIPT_IN_PROGRESS_HEADER}`;
 
     await plugin.app.fileManager.processFrontMatter(noteFile, (frontMatter) => {
       frontMatter.source = `[[${audioFile.path}]]`;
+      frontMatter.created_by = 'Scribe';
     });
 
     return noteFile;
