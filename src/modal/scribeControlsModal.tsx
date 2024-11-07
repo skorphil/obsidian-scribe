@@ -156,8 +156,6 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
     setRecordingDuration(0);
   };
 
-  console.log('rerender');
-
   return (
     <div
       style={{
