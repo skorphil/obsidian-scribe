@@ -28,4 +28,14 @@ export function handleCommands(plugin: ScribePlugin) {
       }
     },
   });
+  plugin.addCommand({
+    id: 'scribe-fix-mermaid-chart',
+    name: 'Fix Mermaid Chart',
+    callback: () => {
+      const activeFile = plugin.app.workspace.getActiveFile();
+      if (activeFile) {
+        plugin.fixMermaidChart(activeFile);
+      }
+    },
+  });
 }

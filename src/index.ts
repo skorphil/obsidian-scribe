@@ -21,6 +21,7 @@ import {
 } from './util/fileUtils';
 import {
   chunkAndTranscribeAudioBuffer,
+  llmFixMermaidChart,
   summarizeTranscript,
   type LLMSummary,
 } from './util/openAiUtils';
@@ -29,6 +30,7 @@ import {
   mimeTypeToFileExtension,
   type SupportedMimeType,
 } from './util/mimeType';
+import { extractMermaidChart } from './util/textUtil';
 
 interface ScribeState {
   isOpen: boolean;
@@ -110,59 +112,67 @@ export default class ScribePlugin extends Plugin {
   }
 
   async scribe() {
-    const baseFileName = createBaseFileName();
+    try {
+      const baseFileName = createBaseFileName();
 
-    const { recordingBuffer, recordingFile } =
-      await this.handleStopAndSaveRecording(baseFileName);
+      const { recordingBuffer, recordingFile } =
+        await this.handleStopAndSaveRecording(baseFileName);
 
-    const scribeNoteFilename = `scribe-${baseFileName}`;
-    const note = await createNewNote(this, scribeNoteFilename);
-    await addAudioSourceToFrontmatter(this, note, recordingFile);
+      const scribeNoteFilename = `scribe-${baseFileName}`;
+      const note = await createNewNote(this, scribeNoteFilename);
+      await addAudioSourceToFrontmatter(this, note, recordingFile);
 
-    const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
-    this.app.workspace.openLinkText(note?.path, currentPath, true);
+      const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
+      this.app.workspace.openLinkText(note?.path, currentPath, true);
 
-    const transcript = await this.handleAudioTranscription(recordingBuffer);
-    await addTranscriptToNote(this, note, transcript);
+      const transcript = await this.handleAudioTranscription(recordingBuffer);
+      await addTranscriptToNote(this, note, transcript);
 
-    const llmSummary = await this.handleTranscriptSummary(transcript);
-    await addSummaryToNote(this, note, llmSummary);
+      const llmSummary = await this.handleTranscriptSummary(transcript);
+      await addSummaryToNote(this, note, llmSummary);
 
-    const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
-    await renameFile(this, note, llmFileName);
+      const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
+      await renameFile(this, note, llmFileName);
+    } catch (error) {
+      new Notice(`Scribe: Something went wrong ${error.toString()}`);
+    }
 
     this.cleanup();
   }
 
   async scribeExistingFile(audioFile: TFile) {
-    if (
-      !mimeTypeToFileExtension(
-        `audio/${audioFile.extension}` as SupportedMimeType,
-      )
-    ) {
-      new Notice('Scribe: ⚠️ This File type is not supported');
-      return;
+    try {
+      if (
+        !mimeTypeToFileExtension(
+          `audio/${audioFile.extension}` as SupportedMimeType,
+        )
+      ) {
+        new Notice('Scribe: ⚠️ This File type is not supported');
+        return;
+      }
+
+      const audioFileBuffer = await this.app.vault.readBinary(audioFile);
+
+      const baseFileName = createBaseFileName();
+      const scribeNoteFilename = `scribe-${baseFileName}`;
+
+      const note = await createNewNote(this, scribeNoteFilename);
+      await addAudioSourceToFrontmatter(this, note, audioFile);
+
+      const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
+      this.app.workspace.openLinkText(note?.path, currentPath, true);
+
+      const transcript = await this.handleAudioTranscription(audioFileBuffer);
+      await addTranscriptToNote(this, note, transcript);
+
+      const llmSummary = await this.handleTranscriptSummary(transcript);
+      await addSummaryToNote(this, note, llmSummary);
+
+      const llmFileName = `scribe-test-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
+      await renameFile(this, note, llmFileName);
+    } catch (error) {
+      new Notice(`Scribe: Something went wrong ${error.toString()}`);
     }
-
-    const audioFileBuffer = await this.app.vault.readBinary(audioFile);
-
-    const baseFileName = createBaseFileName();
-    const scribeNoteFilename = `scribe-${baseFileName}`;
-
-    const note = await createNewNote(this, scribeNoteFilename);
-    await addAudioSourceToFrontmatter(this, note, audioFile);
-
-    const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
-    this.app.workspace.openLinkText(note?.path, currentPath, true);
-
-    const transcript = await this.handleAudioTranscription(audioFileBuffer);
-    await addTranscriptToNote(this, note, transcript);
-
-    const llmSummary = await this.handleTranscriptSummary(transcript);
-    await addSummaryToNote(this, note, llmSummary);
-
-    const llmFileName = `scribe-test-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
-    await renameFile(this, note, llmFileName);
 
     this.cleanup();
   }
@@ -204,6 +214,44 @@ export default class ScribePlugin extends Plugin {
     new Notice('Scribe: 🧠 LLM Summation complete');
 
     return llmSummary;
+  }
+
+  async fixMermaidChart(file: TFile) {
+    try {
+      let brokenMermaidChart: string | undefined;
+      await this.app.vault.process(file, (data) => {
+        console.log(data);
+        brokenMermaidChart = extractMermaidChart(data);
+        return data;
+      });
+
+      let fixedMermaidChart: string | undefined;
+      if (brokenMermaidChart) {
+        fixedMermaidChart = (
+          await llmFixMermaidChart(
+            this.settings.openAiApiKey,
+            brokenMermaidChart,
+          )
+        ).mermaidChart;
+
+        console.log(fixedMermaidChart);
+      }
+
+      if (brokenMermaidChart && fixedMermaidChart) {
+        await this.app.vault.process(file, (data) => {
+          console.log(data);
+          brokenMermaidChart = extractMermaidChart(data);
+
+          return data.replace(
+            brokenMermaidChart as string,
+            `${fixedMermaidChart}
+`,
+          );
+        });
+      }
+    } catch (error) {
+      new Notice(`Scribe: Something went wrong ${error.toString()}`);
+    }
   }
 
   cleanup() {
