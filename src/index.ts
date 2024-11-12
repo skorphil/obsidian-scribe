@@ -135,9 +135,9 @@ export default class ScribePlugin extends Plugin {
       await renameFile(this, note, llmFileName);
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
+    } finally {
+      await this.cleanup();
     }
-
-    this.cleanup();
   }
 
   async scribeExistingFile(audioFile: TFile) {
@@ -172,9 +172,45 @@ export default class ScribePlugin extends Plugin {
       await renameFile(this, note, llmFileName);
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
+    } finally {
+      await this.cleanup();
     }
+  }
 
-    this.cleanup();
+  async fixMermaidChart(file: TFile) {
+    try {
+      let brokenMermaidChart: string | undefined;
+      await this.app.vault.process(file, (data) => {
+        brokenMermaidChart = extractMermaidChart(data);
+        return data;
+      });
+
+      let fixedMermaidChart: string | undefined;
+      if (brokenMermaidChart) {
+        fixedMermaidChart = (
+          await llmFixMermaidChart(
+            this.settings.openAiApiKey,
+            brokenMermaidChart,
+          )
+        ).mermaidChart;
+      }
+
+      if (brokenMermaidChart && fixedMermaidChart) {
+        await this.app.vault.process(file, (data) => {
+          brokenMermaidChart = extractMermaidChart(data);
+
+          return data.replace(
+            brokenMermaidChart as string,
+            `${fixedMermaidChart}
+`,
+          );
+        });
+      }
+    } catch (error) {
+      new Notice(`Scribe: Something went wrong ${error.toString()}`);
+    } finally {
+      await this.cleanup();
+    }
   }
 
   async handleStopAndSaveRecording(baseFileName: string) {
@@ -214,40 +250,6 @@ export default class ScribePlugin extends Plugin {
     new Notice('Scribe: 🧠 LLM Summation complete');
 
     return llmSummary;
-  }
-
-  async fixMermaidChart(file: TFile) {
-    try {
-      let brokenMermaidChart: string | undefined;
-      await this.app.vault.process(file, (data) => {
-        brokenMermaidChart = extractMermaidChart(data);
-        return data;
-      });
-
-      let fixedMermaidChart: string | undefined;
-      if (brokenMermaidChart) {
-        fixedMermaidChart = (
-          await llmFixMermaidChart(
-            this.settings.openAiApiKey,
-            brokenMermaidChart,
-          )
-        ).mermaidChart;
-      }
-
-      if (brokenMermaidChart && fixedMermaidChart) {
-        await this.app.vault.process(file, (data) => {
-          brokenMermaidChart = extractMermaidChart(data);
-
-          return data.replace(
-            brokenMermaidChart as string,
-            `${fixedMermaidChart}
-`,
-          );
-        });
-      }
-    } catch (error) {
-      new Notice(`Scribe: Something went wrong ${error.toString()}`);
-    }
   }
 
   cleanup() {
