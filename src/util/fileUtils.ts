@@ -17,8 +17,9 @@ export async function saveAudioRecording(
 ) {
   const fileName = baseFileName;
   const pathToSave = plugin.settings.recordingDirectory;
-  const fullPath = `${pathToSave}/scribe-recording-${fileName}.${plugin.state.audioRecord?.fileExtension}`;
-  console.log('Saving file to: ', fullPath);
+  const fullPath = normalizePath(
+    `${pathToSave}/scribe-recording-${fileName}.${plugin.state.audioRecord?.fileExtension}`,
+  );
 
   try {
     const savedFile = await plugin.app.vault.createBinary(
