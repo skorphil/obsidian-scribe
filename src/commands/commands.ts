@@ -1,4 +1,3 @@
-import { type Editor, MarkdownView } from 'obsidian';
 import type ScribePlugin from 'src';
 import { ScribeControlsModal } from 'src/modal/scribeControlsModal';
 
