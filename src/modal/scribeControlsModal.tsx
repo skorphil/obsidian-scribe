@@ -187,12 +187,12 @@ export class ScribeControlsModal extends Modal {
     this.plugin = plugin;
   }
 
-  onOpen() {
+  async onOpen() {
     this.plugin.state.isOpen = true;
     this.initModal();
   }
 
-  onClose() {
+  async onClose() {
     const { contentEl } = this;
     contentEl.empty();
     this.plugin.state.isOpen = false;

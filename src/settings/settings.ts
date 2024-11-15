@@ -2,17 +2,25 @@ import { type App, PluginSettingTab, Setting } from 'obsidian';
 import type ScribePlugin from 'src';
 import { LLM_MODELS } from 'src/util/openAiUtils';
 
+export enum TRANSCRIPT_PLATFORM {
+  assemblyAi = 'assemblyAi',
+  openAi = 'openAi',
+}
 export interface ScribePluginSettings {
+  assemblyAiApiKey: string;
   openAiApiKey: string;
   recordingDirectory: string;
   transcriptDirectory: string;
+  transcriptPlatform: TRANSCRIPT_PLATFORM;
   llmModel: LLM_MODELS;
 }
 
 export const DEFAULT_SETTINGS: ScribePluginSettings = {
+  assemblyAiApiKey: '',
   openAiApiKey: '',
   recordingDirectory: '',
   transcriptDirectory: '',
+  transcriptPlatform: TRANSCRIPT_PLATFORM.openAi,
   llmModel: LLM_MODELS['gpt-4o'],
 };
 
@@ -48,6 +56,21 @@ export class ScribeSettingsTab extends PluginSettingTab {
           }),
       );
 
+    new Setting(containerEl)
+      .setName('AssemblyAI Api Key')
+      .setDesc(
+        'You can find this in your AssemblyAI Dev Console - https://www.assemblyai.com/app/account',
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder('c3p0....')
+          .setValue(this.plugin.settings.assemblyAiApiKey)
+          .onChange(async (value) => {
+            this.plugin.settings.assemblyAiApiKey = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
     const foldersInVault = this.plugin.app.vault.getAllFolders();
 
     new Setting(containerEl)
@@ -59,7 +82,6 @@ export class ScribeSettingsTab extends PluginSettingTab {
         }
         component.setValue(this.plugin.settings.recordingDirectory);
         component.onChange(async (value) => {
-          console.log('onChange value', value);
           this.plugin.settings.recordingDirectory = value;
           await this.plugin.saveSettings();
         });
@@ -74,7 +96,6 @@ export class ScribeSettingsTab extends PluginSettingTab {
         }
         component.setValue(this.plugin.settings.transcriptDirectory);
         component.onChange(async (value) => {
-          console.log('onChange value:', value);
           this.plugin.settings.transcriptDirectory = value;
           await this.plugin.saveSettings();
         });
@@ -88,8 +109,21 @@ export class ScribeSettingsTab extends PluginSettingTab {
         }
         component.setValue(this.plugin.settings.llmModel);
         component.onChange(async (value: LLM_MODELS) => {
-          console.log('onChange value:', value);
           this.plugin.settings.llmModel = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName('Transcript Platform:  Your audio is uploaded to this service')
+      .addDropdown((component) => {
+        for (const platform of Object.keys(TRANSCRIPT_PLATFORM)) {
+          component.addOption(platform, platform);
+        }
+        component.setValue(this.plugin.settings.transcriptPlatform);
+        component.onChange(async (value: TRANSCRIPT_PLATFORM) => {
+          console.log(value);
+          this.plugin.settings.transcriptPlatform = value;
           await this.plugin.saveSettings();
         });
       });

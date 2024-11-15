@@ -28,6 +28,7 @@
   "dependencies": {
     "@langchain/core": "^0.3.14",
     "@langchain/openai": "^0.3.11",
+    "assemblyai": "^4.8.0",
     "langchain": "^0.3.3",
     "openai": "^4.68.3",
     "react": "^18.3.1",
