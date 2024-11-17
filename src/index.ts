@@ -24,7 +24,6 @@ import {
   chunkAndTranscribeWithOpenAi,
   llmFixMermaidChart,
   summarizeTranscript,
-  type LLMSummary,
 } from './util/openAiUtils';
 import { ScribeControlsModal } from './modal/scribeControlsModal';
 import {
