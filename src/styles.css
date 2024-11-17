@@ -74,3 +74,31 @@ If your plugin does not need CSS, delete this file.
 .scribe-timer-millis {
   color: #e42a2a;
 }
+
+/* ControlButtons Styles */
+.scribe-active-buttons-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  justify-items: center;
+  align-items: center;
+}
+
+.scribe-buttons-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.scribe-control-buttons-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Add any additional styles for ScribeModal if needed */
+.scribe-modal-container {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+}

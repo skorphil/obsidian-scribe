@@ -9,9 +9,6 @@ function RecordingTimer({ time }: { time: number }) {
   const seconds = `0${Math.floor((time / 1000) % 60)}`.slice(-2);
   const minutes = `0${Math.floor((time / 60000) % 60)}`.slice(-2);
 
-  /**
-   * Using classnames for performance - this component is rendered every ms
-   */
   return (
     <div className="scribe-timer">
       <span className="scribe-timer-digits">{minutes}:</span>
@@ -49,21 +46,8 @@ function ControlButtons({
     </button>
   );
   const ActiveButtons = (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        justifyItems: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
+    <div className="scribe-active-buttons-container">
+      <div className="scribe-buttons-row">
         <button
           className="scribe-btn"
           onClick={handleReset}
@@ -73,9 +57,6 @@ function ControlButtons({
           <TrashIcon />
           Reset
         </button>
-        {/* <div className="btn btn-one" onClick={props.handlePauseResume}>
-        {props.isPaused ? 'Resume' : 'Pause'}
-      </div> */}
 
         <button
           className="scribe-btn scribe-btn-save"
@@ -92,14 +73,7 @@ function ControlButtons({
   );
 
   return (
-    <div
-      style={{
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <div className="scribe-control-buttons-container">
       {active ? ActiveButtons : StartButton}
     </div>
   );
@@ -111,10 +85,6 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
   const [isScribing, setIsScribing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
 
-  /**
-   * TODO: Move this to the RecordingTimer component
-   * we are rerendering like crazy and it can be done in that single component
-   */
   useEffect(() => {
     let interval: number | undefined = undefined;
 
@@ -157,13 +127,7 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignContent: 'center',
-      }}
-    >
+    <div className="scribe-modal-container">
       <RecordingTimer time={recordingDuration} />
       <ControlButtons
         active={isActive}
@@ -212,16 +176,4 @@ export class ScribeControlsModal extends Modal {
     this.root = createRoot(reactTestWrapper);
     this.root.render(<ScribeModal plugin={this.plugin} />);
   }
-}
-
-function formatTime(milliseconds: number): string {
-  let seconds = Math.floor(milliseconds / 1000);
-  let minutes = Math.floor(seconds / 60);
-
-  seconds = seconds % 60;
-  minutes = minutes % 60;
-
-  const pad = (num: number) => num.toString().padStart(2, '0');
-
-  return `${pad(minutes)}:${pad(seconds)}`;
 }
