@@ -45,27 +45,40 @@ export class ScribeControlsModal extends Modal {
 const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
+  const [recordingState, setRecordingState] =
+    useState<RecordingState>('inactive');
   const [isScribing, setIsScribing] = useState(false);
   const [recordingStartTimeMs, setRecordingStartTimeMs] = useState<
     number | null
   >(null);
 
   const handleStart = () => {
+    setRecordingState('recording');
     plugin.startRecording();
     setRecordingStartTimeMs(Date.now());
+
     setIsActive(true);
     setIsPaused(false);
   };
 
   const handlePauseResume = () => {
-    setIsPaused(!isPaused);
-    plugin.state.audioRecord?.pauseRecording();
+    const updatedIsPauseState = !isPaused;
+    setIsPaused(updatedIsPauseState);
+
+    if (updatedIsPauseState) {
+      setRecordingState('paused');
+    } else {
+      setRecordingState('recording');
+    }
+
+    plugin.handlePauseResumeRecording();
   };
 
   const handleComplete = async () => {
     setIsPaused(true);
     setIsScribing(true);
     setRecordingStartTimeMs(null);
+    setRecordingState('inactive');
     await plugin.scribe();
     setIsPaused(false);
     setIsActive(false);
@@ -74,6 +87,8 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
 
   const handleReset = () => {
     plugin.cancelRecording();
+
+    setRecordingState('inactive');
     setIsActive(false);
     setRecordingStartTimeMs(null);
   };
@@ -82,6 +97,7 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
     <div className="scribe-modal-container">
       <ModalRecordingTimer startTimeMs={recordingStartTimeMs} />
       <ModalRecordingButtons
+        recordingState={recordingState}
         active={isActive}
         isPaused={isPaused}
         isScribing={isScribing}

@@ -4,6 +4,7 @@ export function ModalRecordingButtons({
   active,
   isPaused,
   isScribing,
+  recordingState,
   handleStart,
   handlePauseResume,
   handleReset,
@@ -12,6 +13,7 @@ export function ModalRecordingButtons({
   active: boolean;
   isPaused: boolean;
   isScribing: boolean;
+  recordingState: RecordingState;
   handleStart: () => void;
   handlePauseResume: () => void;
   handleReset: () => void;
@@ -39,6 +41,19 @@ export function ModalRecordingButtons({
           <TrashIcon />
           Reset
         </button>
+
+        {/**
+         * 
+        <button
+          className="scribe-btn"
+          onClick={handlePauseResume}
+          type="button"
+          disabled={isScribing}
+        >
+          {recordingState === 'recording' && 'Pause'}
+          {recordingState === 'paused' && 'Resume'}
+        </button>
+         */}
 
         <button
           className="scribe-btn scribe-btn-save"

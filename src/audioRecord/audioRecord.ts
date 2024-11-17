@@ -36,10 +36,33 @@ export class AudioRecord {
       });
   }
 
+  async handlePauseResume() {
+    if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+      console.error(
+        'There is no mediaRecorder, cannot resume handlePauseResume',
+      );
+      throw new Error('There is no mediaRecorder, cannot handlePauseResume');
+    }
+
+    if (this.mediaRecorder.state === 'paused') {
+      this.resumeRecording();
+    } else if (this.mediaRecorder.state === 'recording') {
+      this.pauseRecording();
+    }
+  }
+
+  async resumeRecording() {
+    if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+      console.error('There is no mediaRecorder, cannot resume resumeRecording');
+      throw new Error('There is no mediaRecorder, cannot resumeRecording');
+    }
+    this.mediaRecorder?.resume();
+  }
+
   async pauseRecording() {
     if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
-      console.error('There is no mediaRecorder, cannot stopRecording');
-      throw new Error('There is no mediaRecorder, cannot stopRecording');
+      console.error('There is no mediaRecorder, cannot pauseRecording');
+      throw new Error('There is no mediaRecorder, cannot pauseRecording');
     }
     this.mediaRecorder?.pause();
   }
@@ -71,8 +94,9 @@ export class AudioRecord {
       mimeType: this.mimeType,
       audioBitsPerSecond: this.bitRate,
     });
-    rec.ondataavailable = (e) => this.data.push(e.data);
-    rec.onerror = (e) => console.error('Error recording audio:', e);
+    rec.ondataavailable = (e) => {
+      this.data.push(e.data);
+    };
 
     return rec;
   }

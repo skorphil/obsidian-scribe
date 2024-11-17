@@ -33,7 +33,7 @@ import {
 import { extractMermaidChart } from './util/textUtil';
 import { transcribeAudioWithAssemblyAi } from './util/assemblyAiUtil';
 
-interface ScribeState {
+export interface ScribeState {
   isOpen: boolean;
   counter: number;
   audioRecord: AudioRecord | null;
@@ -103,6 +103,16 @@ export default class ScribePlugin extends Plugin {
     this.state.audioRecord = newRecording;
 
     newRecording.startRecording();
+  }
+
+  async handlePauseResumeRecording() {
+    this.state.audioRecord?.handlePauseResume();
+    if (this.state.audioRecord?.mediaRecorder?.state === 'recording') {
+      new Notice('Scribe: ▶️🎙️ Resuming Recording');
+    }
+    if (this.state.audioRecord?.mediaRecorder?.state === 'paused') {
+      new Notice('Scribe: ⏸️🎙️ Recording Paused');
+    }
   }
 
   async cancelRecording() {
