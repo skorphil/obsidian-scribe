@@ -46,25 +46,13 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
   const [isScribing, setIsScribing] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-
-  useEffect(() => {
-    let interval: number | undefined = undefined;
-
-    if (isActive && isPaused === false) {
-      interval = window.setInterval(() => {
-        setRecordingDuration((recordingDuration) => recordingDuration + 10);
-      }, 10);
-    } else {
-      interval && window.clearInterval(interval as number);
-    }
-    return () => {
-      interval && window.clearInterval(interval as number);
-    };
-  }, [isActive, isPaused]);
+  const [recordingStartTimeMs, setRecordingStartTimeMs] = useState<
+    number | null
+  >(null);
 
   const handleStart = () => {
     plugin.startRecording();
+    setRecordingStartTimeMs(Date.now());
     setIsActive(true);
     setIsPaused(false);
   };
@@ -77,6 +65,7 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
   const handleComplete = async () => {
     setIsPaused(true);
     setIsScribing(true);
+    setRecordingStartTimeMs(null);
     await plugin.scribe();
     setIsPaused(false);
     setIsActive(false);
@@ -86,12 +75,12 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
   const handleReset = () => {
     plugin.cancelRecording();
     setIsActive(false);
-    setRecordingDuration(0);
+    setRecordingStartTimeMs(null);
   };
 
   return (
     <div className="scribe-modal-container">
-      <ModalRecordingTimer time={recordingDuration} />
+      <ModalRecordingTimer startTimeMs={recordingStartTimeMs} />
       <ModalRecordingButtons
         active={isActive}
         isPaused={isPaused}
