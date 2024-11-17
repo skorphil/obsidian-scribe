@@ -1,82 +1,45 @@
 import { createRoot, type Root } from 'react-dom/client';
-import { Modal, Notice, setIcon } from 'obsidian';
+import { Modal } from 'obsidian';
 import type ScribePlugin from 'src';
 import { useEffect, useState } from 'react';
-import { MicVocal, SaveIcon, TrashIcon } from './icons/icons';
+import { ModalSettings } from './components/ModalSettings';
+import { ModalRecordingTimer } from './components/ModalRecordingTimer';
+import { ModalRecordingButtons } from './components/ModalRecordingButtons';
 
-function RecordingTimer({ time }: { time: number }) {
-  const millis = `0${(time / 10) % 100}`.slice(-2);
-  const seconds = `0${Math.floor((time / 1000) % 60)}`.slice(-2);
-  const minutes = `0${Math.floor((time / 60000) % 60)}`.slice(-2);
+export class ScribeControlsModal extends Modal {
+  plugin: ScribePlugin;
+  root: Root | null;
 
-  return (
-    <div className="scribe-timer">
-      <span className="scribe-timer-digits">{minutes}:</span>
-      <span className="scribe-timer-digits">{seconds}.</span>
-      <span className="scribe-timer-digits scribe-timer-millis">{millis}</span>
-    </div>
-  );
-}
+  constructor(plugin: ScribePlugin) {
+    super(plugin.app);
+    this.plugin = plugin;
+  }
 
-function ControlButtons({
-  active,
-  isPaused,
-  isScribing,
-  handleStart,
-  handlePauseResume,
-  handleReset,
-  handleComplete,
-}: {
-  active: boolean;
-  isPaused: boolean;
-  isScribing: boolean;
-  handleStart: () => void;
-  handlePauseResume: () => void;
-  handleReset: () => void;
-  handleComplete: () => void;
-}) {
-  const StartButton = (
-    <button
-      className="scribe-btn scribe-btn-start"
-      onClick={handleStart}
-      type="button"
-    >
-      <MicVocal />
-      Start
-    </button>
-  );
-  const ActiveButtons = (
-    <div className="scribe-active-buttons-container">
-      <div className="scribe-buttons-row">
-        <button
-          className="scribe-btn"
-          onClick={handleReset}
-          type="button"
-          disabled={isScribing}
-        >
-          <TrashIcon />
-          Reset
-        </button>
+  async onOpen() {
+    this.plugin.state.isOpen = true;
+    this.initModal();
+  }
 
-        <button
-          className="scribe-btn scribe-btn-save"
-          onClick={handleComplete}
-          type="button"
-          disabled={isScribing}
-        >
-          <SaveIcon />
-          Complete
-        </button>
-      </div>
-      {isScribing && <h2>♽ Scribe In progress</h2>}
-    </div>
-  );
+  async onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+    this.plugin.state.isOpen = false;
+    this.plugin.cancelRecording();
+    this.root?.unmount();
+  }
 
-  return (
-    <div className="scribe-control-buttons-container">
-      {active ? ActiveButtons : StartButton}
-    </div>
-  );
+  initModal() {
+    const { contentEl } = this;
+    this.modalEl.addClass('scribe-modal');
+    contentEl.innerHTML = '';
+
+    const reactTestWrapper = contentEl.createDiv({
+      cls: 'scribe-controls-modal-react',
+    });
+
+    this.root = createRoot(reactTestWrapper);
+    this.root.render(<ScribeModal plugin={this.plugin} />);
+  }
 }
 
 const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
@@ -128,8 +91,8 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
 
   return (
     <div className="scribe-modal-container">
-      <RecordingTimer time={recordingDuration} />
-      <ControlButtons
+      <ModalRecordingTimer time={recordingDuration} />
+      <ModalRecordingButtons
         active={isActive}
         isPaused={isPaused}
         isScribing={isScribing}
@@ -138,42 +101,9 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
         handleComplete={handleComplete}
         handleReset={handleReset}
       />
+
+      <hr />
+      <ModalSettings plugin={plugin} />
     </div>
   );
 };
-
-export class ScribeControlsModal extends Modal {
-  plugin: ScribePlugin;
-  root: Root | null;
-
-  constructor(plugin: ScribePlugin) {
-    super(plugin.app);
-    this.plugin = plugin;
-  }
-
-  async onOpen() {
-    this.plugin.state.isOpen = true;
-    this.initModal();
-  }
-
-  async onClose() {
-    const { contentEl } = this;
-    contentEl.empty();
-    this.plugin.state.isOpen = false;
-    this.plugin.cancelRecording();
-    this.root?.unmount();
-  }
-
-  initModal() {
-    const { contentEl } = this;
-    this.modalEl.addClass('scribe-modal');
-    contentEl.innerHTML = '';
-
-    const reactTestWrapper = contentEl.createDiv({
-      cls: 'scribe-controls-modal-react',
-    });
-
-    this.root = createRoot(reactTestWrapper);
-    this.root.render(<ScribeModal plugin={this.plugin} />);
-  }
-}
