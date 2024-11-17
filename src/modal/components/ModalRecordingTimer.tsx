@@ -20,6 +20,7 @@ export function ModalRecordingTimer({
         setDuration({ minutes, seconds, milliseconds });
       }, 10);
     } else {
+      setDuration({ minutes: 0, seconds: 0, milliseconds: 0 });
       interval && window.clearInterval(interval as number);
     }
     return () => {
