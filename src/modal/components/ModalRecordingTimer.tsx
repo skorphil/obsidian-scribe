@@ -12,7 +12,7 @@ export function ModalRecordingTimer({
   useEffect(() => {
     let interval: number | undefined = undefined;
 
-    if (startTimeMs) {
+    if (startTimeMs && !interval) {
       interval = window.setInterval(() => {
         const { minutes, seconds, milliseconds } =
           calculateDuration(startTimeMs);
