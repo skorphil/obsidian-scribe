@@ -21,7 +21,7 @@ import {
   saveAudioRecording,
 } from './util/fileUtils';
 import {
-  chunkAndTranscribeAudioBuffer,
+  chunkAndTranscribeWithOpenAi,
   llmFixMermaidChart,
   summarizeTranscript,
   type LLMSummary,
@@ -32,7 +32,7 @@ import {
   type SupportedMimeType,
 } from './util/mimeType';
 import { extractMermaidChart } from './util/textUtil';
-import { transcribeAudio } from './util/assemblyAiUtil';
+import { transcribeAudioWithAssemblyAi } from './util/assemblyAiUtil';
 
 interface ScribeState {
   isOpen: boolean;
@@ -127,12 +127,7 @@ export default class ScribePlugin extends Plugin {
       const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
       this.app.workspace.openLinkText(note?.path, currentPath, true);
 
-      console.log(this.settings.transcriptPlatform);
-      const transcript =
-        this.settings.transcriptPlatform === TRANSCRIPT_PLATFORM.assemblyAi
-          ? await this.handleAudioTranscriptionWithAssembly(recordingBuffer)
-          : await this.handleAudioTranscriptionWithOpenAi(recordingBuffer);
-
+      const transcript = await this.handleTranscription(recordingBuffer);
       await addTranscriptToNote(this, note, transcript);
 
       const llmSummary = await this.handleTranscriptSummary(transcript);
@@ -169,10 +164,7 @@ export default class ScribePlugin extends Plugin {
       const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
       this.app.workspace.openLinkText(note?.path, currentPath, true);
 
-      const transcript =
-        this.settings.transcriptPlatform === TRANSCRIPT_PLATFORM.assemblyAi
-          ? await this.handleAudioTranscriptionWithAssembly(audioFileBuffer)
-          : await this.handleAudioTranscriptionWithOpenAi(audioFileBuffer);
+      const transcript = await this.handleTranscription(audioFileBuffer);
 
       await addTranscriptToNote(this, note, transcript);
 
@@ -241,27 +233,35 @@ export default class ScribePlugin extends Plugin {
     return { recordingBuffer, recordingFile };
   }
 
-  async handleAudioTranscriptionWithAssembly(audioFilePath: ArrayBuffer) {
-    new Notice('Scribe: 🎧 Beginning Transcription w/ AssemblyAI');
+  async handleTranscription(audioBuffer: ArrayBuffer) {
+    try {
+      new Notice(
+        `Scribe: 🎧 Beginning Transcription w/ ${this.settings.transcriptPlatform}`,
+      );
+      const transcript =
+        this.settings.transcriptPlatform === TRANSCRIPT_PLATFORM.assemblyAi
+          ? await transcribeAudioWithAssemblyAi(
+              this.settings.assemblyAiApiKey,
+              audioBuffer,
+            )
+          : await chunkAndTranscribeWithOpenAi(
+              this.settings.openAiApiKey,
+              audioBuffer,
+            );
 
-    const transcript = await transcribeAudio(
-      this.settings.assemblyAiApiKey,
-      audioFilePath,
-    );
+      new Notice(
+        `Scribe: 🎧 Completed Transcription  w/ ${this.settings.transcriptPlatform}`,
+      );
+      return transcript;
+    } catch (error) {
+      new Notice(
+        `Scribe: 🎧 🛑 Something went wrong trying to Transcribe w/  ${this.settings.transcriptPlatform}
+        ${error.toString()}`,
+      );
 
-    new Notice('Scribe: 🎧 Transcription w/ AssemblyAI Complete');
-    return transcript;
-  }
-
-  async handleAudioTranscriptionWithOpenAi(audioBuffer: ArrayBuffer) {
-    new Notice('Scribe: 🎧 Beginning Transcription w/ OpenAI');
-    const transcript = await chunkAndTranscribeAudioBuffer(
-      this.settings.openAiApiKey,
-      audioBuffer,
-    );
-    new Notice('Scribe: 🎧 Transcription w/ OpenAI Complete');
-
-    return transcript;
+      console.error;
+      throw error;
+    }
   }
 
   async handleTranscriptSummary(transcript: string) {

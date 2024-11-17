@@ -1,6 +1,6 @@
 import { AssemblyAI, type TranscribeParams } from 'assemblyai';
 
-export async function transcribeAudio(
+export async function transcribeAudioWithAssemblyAi(
   apiKey: string,
   audioFilePath: ArrayBuffer,
 ): Promise<string> {

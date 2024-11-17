@@ -21,7 +21,7 @@ export enum LLM_MODELS {
 
 const MAX_CHUNK_SIZE = 25 * 1024 * 1024;
 
-export async function chunkAndTranscribeAudioBuffer(
+export async function chunkAndTranscribeWithOpenAi(
   openAiKey: string,
   audioBuffer: ArrayBuffer,
 ) {
