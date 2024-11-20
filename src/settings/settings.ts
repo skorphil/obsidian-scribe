@@ -122,7 +122,6 @@ export class ScribeSettingsTab extends PluginSettingTab {
         }
         component.setValue(this.plugin.settings.transcriptPlatform);
         component.onChange(async (value: TRANSCRIPT_PLATFORM) => {
-          console.log(value);
           this.plugin.settings.transcriptPlatform = value;
           await this.plugin.saveSettings();
         });
