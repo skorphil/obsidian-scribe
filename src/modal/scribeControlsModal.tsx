@@ -31,7 +31,6 @@ export class ScribeControlsModal extends Modal {
   initModal() {
     const { contentEl } = this;
     this.modalEl.addClass('scribe-modal');
-    contentEl.innerHTML = '';
 
     const reactTestWrapper = contentEl.createDiv({
       cls: 'scribe-controls-modal-react',
