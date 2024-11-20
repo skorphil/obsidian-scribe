@@ -58,6 +58,12 @@ Your insights, improvements, and feedback are what make Scribe better. Feel free
 
 ## 🙏 Acknowledgments
 
+An deep bow, acknowledgement and gratitude to the innumerable nameless Humans from Colombia to the Phillipines to Kenya and beyond who used their intelligence and human hearts to help train what we are calling artificial intelligence.
+
+https://www.noemamag.com/the-exploited-labor-behind-artificial-intelligence/
+https://www.wired.com/story/millions-of-workers-are-training-ai-models-for-pennies/
+
+
 A special thanks to [Drew Mcdonald of the Magic Mic Plugin](https://github.com/drewmcdonald/obsidian-magic-mic), this was super useful for learning how to access & use the audio buffers
 Also a special thanks to [Mossy1022 of the Smart Memos Plugin](https://github.com/Mossy1022/Smart-Memos) including Mermaid Charts is SO useful, and I got that idea from your plugin.
 
