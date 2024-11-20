@@ -1,4 +1,4 @@
-# 📝 Scribe for Obsidian
+# Scribe for Obsidian 🎙️
 
 Transform your voice into insights with Scribe, an Obsidian plugin that not only records your voice and transcribes it, but summarizes, and enriches the note with the power of AI. 
 
