@@ -11,7 +11,7 @@ export function handleCommands(plugin: ScribePlugin) {
   // This adds a simple command that can be triggered anywhere
   plugin.addCommand({
     id: 'scribe-recording-modal',
-    name: 'Begin Recording with Scribe',
+    name: 'Begin Recording',
     callback: () => {
       plugin.state.isOpen = true;
       new ScribeControlsModal(plugin).open();
