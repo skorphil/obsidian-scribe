@@ -1,96 +1,82 @@
-# Obsidian Sample Plugin
+# 📝 Scribe for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Transform your voice into insights with Scribe, an Obsidian plugin that not only records your voice and transcribes it, but summarizes, and enriches the note with the power of AI. 
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+Dive into a seamless experience where your spoken words are effortlessly converted into a structured, easy-to-navigate knowledge base.  
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+Forgot a phrase or concept while recording?  Ask "Hey Scribe" followed by a question in the middle of recording and it will fill in the blanks for you
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+## 🌟 Key Features
+- **Voice-to-Text Magic:** Begin recording and watch as your voice notes are transcribed, summarized, and turned into actionable insights.
+- **Interactive Queries:** Ask questions mid-recording, and Scribe fetches the answers, integrating them directly into your notes.
+- **Mermaid Chart Creation:** Visualize your thoughts and summaries with automatically generated Mermaid charts, providing a unique perspective on your notes.
+- **Robust on Failure:** Designed with mobile users in mind, Scribe ensures that no step in the process is a single point of failure. Record, transcribe, and summarize on the go, with each step saved progressively. (WIP)
+- **Seamless Integration:** Utilizes AssemblyAI or OpenAI Whisper for top-tier transcription accuracy and OpenAI for cutting-edge summarization
 
-## First time developing plugins?
+## 🕹️ Commands
+### From the Ribbon button
+- Either Click Start Recording or Open the Controls Modal
+### From the Command Pallette type "Scribe"
+- **Begin Recording with Scribe:** - Opens the controls modal for you to begin recording
+- **Transcribe & Summarize Current File:** - Run this on an open audio file - it will Scribe this file.  Very useful for recording offline and later Scribing it
+- **Fix Mermaid Chart:** - Sometimes the generated Mermaid Chart is invalid, this will attempt to fix it.
 
-Quick starting guide for new plugin devs:
+## ⚙️ Settings / Config
+- **OpenAI API Key (Required):** Essential for transcription and summarization. Set your key in the `Settings`.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+Get your key here - [Open AI Developer Console - https://platform.openai.com/settings](https://platform.openai.com/settings)
 
-## Releasing new releases
+- **AssemblyAI Key (Optional):** For enhanced transcription accuracy and optionality of services. Enjoy a $50 credit from AssemblyAI to get started.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+Get your key in the  [AssemblyAI Dev Console https://www.assemblyai.com/app/account](https://www.assemblyai.com/app/account)
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## 🚀 Getting Started
 
-## Adding your plugin to the community plugin list
+### Installation
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+1. In Obsidian, navigate to `Settings` > `Community Plugins`.
+2. Search for `Scribe` and click `Install`.
+3. Once installed, toggle `Enable` to activate Scribe.
 
-## How to use
+## 📖 How to Use
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+1. **Start Recording:** Trigger the Scribe action or select it from the ribbon and begin recording 
+2. **Interactive Queries:** Pose questions during recording to have them answered and integrated into your notes just say "Hey Scribe" followed by the question.
+3. **Review and Explore:** Access the transcribed text, summary, insights, and Mermaid charts directly in your note.
 
-## Manually installing the plugin
+## 📱 Mobile
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+Scribe shines in mobile scenarios, gracefully handling interruptions or connectivity issues. If any step fails, simply resume without losing any progress.
+This is a WIP, you will never lose your audio, but it will regenerate the note, transcription and summary
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
+### Known Issues
+1. On iOS, the screen must be **ON** while recording otherwise it won't capture youre voice.  This is a limitation of Obsidian.
 
-## Funding URL
+## 🛠 How to Contribute
 
-You can include funding URLs where people who use your plugin can financially support it.
+Your insights, improvements, and feedback are what make Scribe better. Feel free to submit issues, pull requests, or suggestions to enhance the plugin further.
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## 🙏 Acknowledgments
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
+A special thanks to [Drew Mcdonald of the Magic Mic Plugin](https://github.com/drewmcdonald/obsidian-magic-mic), this was super useful for learning how to access & use the audio buffers
+Also a special thanks to [Mossy1022 of the Smart Memos Plugin](https://github.com/Mossy1022/Smart-Memos) including Mermaid Charts is SO useful, and I got that idea from your plugin.
 
-If you have multiple URLs, you can also do:
+## 🔒 License
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+Scribe is released under the MIT License. Feel free to use, modify, and distribute it as you see fit.
 
-## API Documentation
+## 📬 Contact
 
-See https://github.com/obsidianmd/obsidian-api
+Got questions, feedback, or ideas? Reach out through [GitHub Issues](#) or join our Discord channel to become part of the Scribe community.
+
+## ❓ FAQ
+
+**Q: Do I need both OpenAI and AssemblyAI keys?**  
+A: An OpenAI key is essential, while the AssemblyAI key is optional but recommended for better transcription accuracy.
+
+**Q: Can I use Scribe offline?**  
+A: Scribe requires an internet connection for transcription and summarization services.  You can record offline and later use the Transcribe & Summarize Current File command on the Audio file to Scribe it.
+
+---
+
+Dive into a new era of note-taking with Scribe – Where your voice breathes life into ideas. 🌈✨
