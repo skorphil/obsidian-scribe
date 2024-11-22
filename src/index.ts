@@ -287,6 +287,11 @@ export default class ScribePlugin extends Plugin {
 
   cleanup() {
     this.controlModal.close();
+
+    if (this.state.audioRecord?.mediaRecorder?.state === 'recording') {
+      this.state.audioRecord?.stopRecording();
+    }
+
     this.state.audioRecord = null;
   }
 }
