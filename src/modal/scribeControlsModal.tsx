@@ -51,9 +51,9 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
     number | null
   >(null);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     setRecordingState('recording');
-    plugin.startRecording();
+    await plugin.startRecording();
     setRecordingStartTimeMs(Date.now());
 
     setIsActive(true);
