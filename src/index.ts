@@ -98,7 +98,7 @@ export default class ScribePlugin extends Plugin {
   }
 
   async startRecording() {
-    new Notice('Scribe: 🎙️ Recording Started');
+    new Notice('Scribe: 🎙️ Recording started');
     const newRecording = new AudioRecord();
     this.state.audioRecord = newRecording;
 
@@ -108,16 +108,16 @@ export default class ScribePlugin extends Plugin {
   async handlePauseResumeRecording() {
     this.state.audioRecord?.handlePauseResume();
     if (this.state.audioRecord?.mediaRecorder?.state === 'recording') {
-      new Notice('Scribe: ▶️🎙️ Resuming Recording');
+      new Notice('Scribe: ▶️🎙️ Resuming recording');
     }
     if (this.state.audioRecord?.mediaRecorder?.state === 'paused') {
-      new Notice('Scribe: ⏸️🎙️ Recording Paused');
+      new Notice('Scribe: ⏸️🎙️ Recording paused');
     }
   }
 
   async cancelRecording() {
     if (this.state.audioRecord?.mediaRecorder) {
-      new Notice('Scribe: 🛑️ Recording Cancelled');
+      new Notice('Scribe: 🛑️ Recording cancelled');
       await this.state.audioRecord?.stopRecording();
     }
   }
@@ -146,6 +146,7 @@ export default class ScribePlugin extends Plugin {
       await renameFile(this, note, llmFileName);
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
+      console.error('Scribe: Something went wrong', error);
     } finally {
       await this.cleanup();
     }
@@ -158,7 +159,7 @@ export default class ScribePlugin extends Plugin {
           `audio/${audioFile.extension}` as SupportedMimeType,
         )
       ) {
-        new Notice('Scribe: ⚠️ This File type is not supported');
+        new Notice('Scribe: ⚠️ This file type is not supported');
         return;
       }
 
@@ -237,7 +238,7 @@ export default class ScribePlugin extends Plugin {
       recordingBuffer,
       baseFileName,
     );
-    new Notice(`Scribe: ✅ Audio File saved ${recordingFile.name}`);
+    new Notice(`Scribe: ✅ Audio file saved ${recordingFile.name}`);
 
     return { recordingBuffer, recordingFile };
   }
@@ -274,13 +275,13 @@ export default class ScribePlugin extends Plugin {
   }
 
   async handleTranscriptSummary(transcript: string) {
-    new Notice('Scribe: 🧠 Sending to LLM to Summarize');
+    new Notice('Scribe: 🧠 Sending to LLM to summarize');
     const llmSummary = await summarizeTranscript(
       this.settings.openAiApiKey,
       transcript,
       this.settings.llmModel,
     );
-    new Notice('Scribe: 🧠 LLM Summation complete');
+    new Notice('Scribe: 🧠 LLM summation complete');
 
     return llmSummary;
   }

@@ -65,7 +65,7 @@ export function ModalRecordingButtons({
           Complete
         </button>
       </div>
-      {isScribing && <h2>♽ Scribe In progress</h2>}
+      {isScribing && <h2>♽ Scribe in progress</h2>}
     </div>
   );
 

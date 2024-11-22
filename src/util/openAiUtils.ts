@@ -30,7 +30,7 @@ export async function chunkAndTranscribeWithOpenAi(
     dangerouslyAllowBrowser: true,
   });
   const audioFiles = await audioDataToChunkedFiles(audioBuffer, MAX_CHUNK_SIZE);
-  new Notice(`Scribe: 🎧 Split Transcript into ${audioFiles.length} Files`);
+  new Notice(`Scribe: 🎧 Split transcript into ${audioFiles.length} files`);
 
   const transcript = await transcribeAudio(openAiClient, {
     audioFiles,
