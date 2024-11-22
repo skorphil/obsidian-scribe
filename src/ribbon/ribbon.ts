@@ -18,27 +18,36 @@ export function handleRibbon(plugin: ScribePlugin) {
 function scribeDropDownMenu(plugin: ScribePlugin): Menu {
   const menu = new Menu();
 
-  menu.addItem((item) => {
-    item.setIcon('disk-2');
-    item.setTitle('🕹️ Open Controls');
-    item.onClick(() => {
-      plugin.state.isOpen = true;
-      plugin.controlModal.open();
-    });
-  });
+  const showRecordingInProgressControls =
+    plugin.state.audioRecord?.mediaRecorder?.state === 'recording';
 
-  if (plugin.state.audioRecord?.mediaRecorder?.state === 'recording') {
+  if (showRecordingInProgressControls) {
     menu.addItem((item) => {
-      item.setIcon('mic-vocal');
-      item.setTitle('🛑🎙️ Stop Recording');
+      item.setIcon('trash-2');
+      item.setTitle('Cancel Recording');
+      item.onClick(() => {
+        plugin.cancelRecording();
+      });
+    });
+    menu.addItem((item) => {
+      item.setIcon('save');
+      item.setTitle('Stop Recording');
       item.onClick(() => {
         plugin.scribe();
       });
     });
   } else {
     menu.addItem((item) => {
-      item.setTitle('🎙️ Start Recording');
+      item.setIcon('joystick');
+      item.setTitle('Open Controls');
+      item.onClick(() => {
+        plugin.state.isOpen = true;
+        plugin.controlModal.open();
+      });
+    });
+    menu.addItem((item) => {
       item.setIcon('mic-vocal');
+      item.setTitle('Start Recording');
       item.onClick(() => {
         plugin.startRecording();
       });
