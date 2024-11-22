@@ -42,7 +42,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName('Open AI Api Key')
+      .setName('Open AI API Key')
       .setDesc(
         'You can find this in your OpenAI Dev Console - https://platform.openai.com/settings',
       )
@@ -57,7 +57,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName('AssemblyAI Api Key')
+      .setName('AssemblyAI API Key')
       .setDesc(
         'You can find this in your AssemblyAI Dev Console - https://www.assemblyai.com/app/account',
       )

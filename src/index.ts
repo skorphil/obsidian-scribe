@@ -78,9 +78,9 @@ export default class ScribePlugin extends Plugin {
 
     if (!this.settings.openAiApiKey) {
       console.error(
-        'OpenAI Api key is needed in Scribes settings - https://platform.openai.com/settings',
+        'OpenAI API key is needed in Scribes settings - https://platform.openai.com/settings',
       );
-      new Notice('⚠️ Scribe: OpenAI Api key is missing for Scribe');
+      new Notice('⚠️ Scribe: OpenAI API key is missing for Scribe');
     }
 
     if (!this.settings.recordingDirectory) {
