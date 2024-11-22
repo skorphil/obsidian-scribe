@@ -13,10 +13,6 @@ export function handleRibbon(plugin: ScribePlugin) {
   );
   // Perform additional things with the ribbon
   ribbonIconEl.addClass('scribe-plugin-ribbon');
-
-  // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-  const statusBarItemEl = plugin.addStatusBarItem();
-  statusBarItemEl.setText('Status Bar Text');
 }
 
 function scribeDropDownMenu(plugin: ScribePlugin): Menu {
