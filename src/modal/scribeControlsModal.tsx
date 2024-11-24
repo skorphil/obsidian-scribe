@@ -1,7 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client';
 import { Modal } from 'obsidian';
 import type ScribePlugin from 'src';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ModalSettings } from './components/ModalSettings';
 import { ModalRecordingTimer } from './components/ModalRecordingTimer';
 import { ModalRecordingButtons } from './components/ModalRecordingButtons';
@@ -42,6 +42,7 @@ export class ScribeControlsModal extends Modal {
 }
 
 const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
   const [recordingState, setRecordingState] =
@@ -107,7 +108,13 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
       />
 
       <hr />
+      <button onClick={() => setIsSettingsExpanded(!isSettingsExpanded)} type="button" className="scribe-settings-btn">
+        Settings
+      </button>
+      {isSettingsExpanded && (
+
       <ModalSettings plugin={plugin} />
+      )}
     </div>
   );
 };

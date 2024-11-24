@@ -102,3 +102,21 @@ If your plugin does not need CSS, delete this file.
   flex-direction: column;
   align-content: center;
 }
+
+.scribe-settings-btn {
+  display: inline-block;
+  outline: 0;
+  border: none;
+  cursor: pointer;
+  height: 32px;
+  width: fit-content;
+  padding: 0px 16px;
+  border-radius: 50px;
+  background-color: #2222220d;
+  color: #222;
+  font-size: 12px;
+  font-weight: 500;
+  :hover {
+      background-color: #2222221a;
+  }
+}
