@@ -85,7 +85,8 @@ export async function summarizeTranscript(
   The following is the transcription generated from a recording of someone talking aloud or multiple people in a conversation. 
   There may be a lot of random things said given fluidity of conversation or thought process and the microphone's ability to pick up all audio.  
 
-  The transcription may address you by calling you "Scribe" and asking you a question, they also may just allude to you by asking "you" to do something
+  The transcription may address you by calling you "Scribe" or saying "Hey Scribe" and asking you a question, they also may just allude to you by asking "you" to do something.
+  Give them the answers to this question
 
   Give me notes in Markdown language on what was said, they should be
   - Easy to understand
@@ -135,9 +136,10 @@ export async function summarizeTranscript(
       .string()
       .optional()
       .describe(
-        `If the user says "Scribe" or alludes to you, asking you to do something, answer the question or do the ask and put the answers here
+        `If the user says "Hey Scribe" or alludes to you, asking you to do something, answer the question or do the ask and put the answers here
         Put the text in markdown, it will be nested under an h1 tag
-        Summarize the question in a short sentence as a header and format the reply nicely below for as many questions as there are
+        Summarize the question in a short sentence as a header and format place your reply nicely below for as many questions as there are
+        Answer their questions in a clear and concise manner
       `,
       ),
     title: z
