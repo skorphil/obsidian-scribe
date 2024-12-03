@@ -137,30 +137,6 @@ ${mermaidChart}
   }
 }
 
-/**
- * Written by ChatGPT, hope it's okay
- */
-export function formatForFilename(input: string): string {
-  // Remove problematic characters
-  const safeString = input
-    // biome-ignore lint/suspicious/noControlCharactersInRegex: It's all good
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
-    // Optional: Replace spaces with underscores or another preferred character
-    .replace(/\s+/g, '_')
-    // Avoid trailing periods or spaces which Windows does not like
-    .replace(/\.*\s*$/, '');
-
-  // Truncate to 255 characters to ensure compatibility
-  // This limit is chosen based on common filesystem limits
-  const maxLength = 255;
-  const truncatedString =
-    safeString.length > maxLength
-      ? safeString.substring(0, maxLength)
-      : safeString;
-
-  return truncatedString;
-}
-
 export async function renameFile(
   plugin: ScribePlugin,
   originalNote: TFile,

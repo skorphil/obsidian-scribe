@@ -1,4 +1,4 @@
-import { Notice, Plugin, type TFile, moment } from 'obsidian';
+import { Notice, Plugin, type TFile, moment, normalizePath } from 'obsidian';
 import type OpenAI from 'openai';
 import {
   DEFAULT_SETTINGS,
@@ -16,7 +16,6 @@ import {
   addTranscriptToNote,
   createBaseFileName,
   createNewNote,
-  formatForFilename,
   renameFile,
   saveAudioRecording,
 } from './util/fileUtils';
@@ -142,7 +141,7 @@ export default class ScribePlugin extends Plugin {
       const llmSummary = await this.handleTranscriptSummary(transcript);
       await addSummaryToNote(this, note, llmSummary);
 
-      const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
+      const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${normalizePath(llmSummary.title)}`;
       await renameFile(this, note, llmFileName);
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
@@ -181,7 +180,7 @@ export default class ScribePlugin extends Plugin {
       const llmSummary = await this.handleTranscriptSummary(transcript);
       await addSummaryToNote(this, note, llmSummary);
 
-      const llmFileName = `scribe-test-${moment().format('YYYY-MM-DD')}-${formatForFilename(llmSummary.title)}`;
+      const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${normalizePath(llmSummary.title)}`;
       await renameFile(this, note, llmFileName);
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
@@ -246,7 +245,7 @@ export default class ScribePlugin extends Plugin {
   async handleTranscription(audioBuffer: ArrayBuffer) {
     try {
       new Notice(
-        `Scribe: 🎧 Beginning Transcription w/ ${this.settings.transcriptPlatform}`,
+        `Scribe: 🎧 Beginning transcription w/ ${this.settings.transcriptPlatform}`,
       );
       const transcript =
         this.settings.transcriptPlatform === TRANSCRIPT_PLATFORM.assemblyAi
@@ -260,7 +259,7 @@ export default class ScribePlugin extends Plugin {
             );
 
       new Notice(
-        `Scribe: 🎧 Completed Transcription  w/ ${this.settings.transcriptPlatform}`,
+        `Scribe: 🎧 Completed transcription  w/ ${this.settings.transcriptPlatform}`,
       );
       return transcript;
     } catch (error) {

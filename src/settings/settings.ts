@@ -42,7 +42,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName('Open AI API Key')
+      .setName('Open AI API key')
       .setDesc(
         'You can find this in your OpenAI dev console - https://platform.openai.com/settings',
       )
@@ -57,7 +57,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName('AssemblyAI API Key')
+      .setName('AssemblyAI API key')
       .setDesc(
         'You can find this in your AssemblyAI dev console - https://www.assemblyai.com/app/account',
       )
@@ -115,7 +115,9 @@ export class ScribeSettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Transcript platform:  Your audio is uploaded to this service')
+      .setName(
+        'Transcript platform:  Your recording is uploaded to this service',
+      )
       .addDropdown((component) => {
         for (const platform of Object.keys(TRANSCRIPT_PLATFORM)) {
           component.addOption(platform, platform);
