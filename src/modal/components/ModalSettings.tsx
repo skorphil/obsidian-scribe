@@ -37,7 +37,7 @@ export const ModalSettings = ({ plugin }: { plugin: ScribePlugin }) => {
     <div>
       <div>
         <label htmlFor="llmModelSelect">
-          LLM Model for creating the Summary
+          LLM model for creating the summary
         </label>
         <select
           id="llmModelSelect"
@@ -53,7 +53,7 @@ export const ModalSettings = ({ plugin }: { plugin: ScribePlugin }) => {
       </div>
 
       <div>
-        <label htmlFor="transcriptPlatformSelect">Transcript Platform</label>
+        <label htmlFor="transcriptPlatformSelect">Transcript platform</label>
         <select
           id="transcriptPlatformSelect"
           value={transcriptPlatform}
