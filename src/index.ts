@@ -128,21 +128,7 @@ export default class ScribePlugin extends Plugin {
       const { recordingBuffer, recordingFile } =
         await this.handleStopAndSaveRecording(baseFileName);
 
-      const scribeNoteFilename = `scribe-${baseFileName}`;
-      const note = await createNewNote(this, scribeNoteFilename);
-      await addAudioSourceToFrontmatter(this, note, recordingFile);
-
-      const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
-      this.app.workspace.openLinkText(note?.path, currentPath, true);
-
-      const transcript = await this.handleTranscription(recordingBuffer);
-      await addTranscriptToNote(this, note, transcript);
-
-      const llmSummary = await this.handleTranscriptSummary(transcript);
-      await addSummaryToNote(this, note, llmSummary);
-
-      const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${normalizePath(llmSummary.title)}`;
-      await renameFile(this, note, llmFileName);
+      await this.handleScribeFile(baseFileName, recordingFile, recordingBuffer);
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
       console.error('Scribe: Something went wrong', error);
@@ -161,27 +147,11 @@ export default class ScribePlugin extends Plugin {
         new Notice('Scribe: ⚠️ This file type is not supported');
         return;
       }
+      const baseFileName = createBaseFileName();
 
       const audioFileBuffer = await this.app.vault.readBinary(audioFile);
 
-      const baseFileName = createBaseFileName();
-      const scribeNoteFilename = `scribe-${baseFileName}`;
-
-      const note = await createNewNote(this, scribeNoteFilename);
-      await addAudioSourceToFrontmatter(this, note, audioFile);
-
-      const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
-      this.app.workspace.openLinkText(note?.path, currentPath, true);
-
-      const transcript = await this.handleTranscription(audioFileBuffer);
-
-      await addTranscriptToNote(this, note, transcript);
-
-      const llmSummary = await this.handleTranscriptSummary(transcript);
-      await addSummaryToNote(this, note, llmSummary);
-
-      const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${normalizePath(llmSummary.title)}`;
-      await renameFile(this, note, llmFileName);
+      await this.handleScribeFile(baseFileName, audioFile, audioFileBuffer);
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
       console.error('Scribe: Something went wrong', error);
@@ -240,6 +210,28 @@ export default class ScribePlugin extends Plugin {
     new Notice(`Scribe: ✅ Audio file saved ${recordingFile.name}`);
 
     return { recordingBuffer, recordingFile };
+  }
+
+  async handleScribeFile(
+    baseNoteAndAudioFileName: string,
+    audioRecordingFile: TFile,
+    audioRecordingBuffer: ArrayBuffer,
+  ) {
+    const scribeNoteFilename = `scribe-${baseNoteAndAudioFileName}`;
+    const note = await createNewNote(this, scribeNoteFilename);
+    await addAudioSourceToFrontmatter(this, note, audioRecordingFile);
+
+    const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
+    this.app.workspace.openLinkText(note?.path, currentPath, true);
+
+    const transcript = await this.handleTranscription(audioRecordingBuffer);
+    await addTranscriptToNote(this, note, transcript);
+
+    const llmSummary = await this.handleTranscriptSummary(transcript);
+    await addSummaryToNote(this, note, llmSummary);
+
+    const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${normalizePath(llmSummary.title)}`;
+    await renameFile(this, note, llmFileName);
   }
 
   async handleTranscription(audioBuffer: ArrayBuffer) {
