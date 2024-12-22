@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { ModalSettings } from './components/ModalSettings';
 import { ModalRecordingTimer } from './components/ModalRecordingTimer';
 import { ModalRecordingButtons } from './components/ModalRecordingButtons';
+import { CircleAlert } from './icons/icons';
 
 export class ScribeControlsModal extends Modal {
   plugin: ScribePlugin;
@@ -52,6 +53,8 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
     number | null
   >(null);
 
+  const hasOpenAiApiKey = Boolean(plugin.settings.openAiApiKey);
+
   const handleStart = async () => {
     setRecordingState('recording');
     await plugin.startRecording();
@@ -95,26 +98,44 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
 
   return (
     <div className="scribe-modal-container">
-      <ModalRecordingTimer startTimeMs={recordingStartTimeMs} />
-      <ModalRecordingButtons
-        recordingState={recordingState}
-        active={isActive}
-        isPaused={isPaused}
-        isScribing={isScribing}
-        handleStart={handleStart}
-        handlePauseResume={handlePauseResume}
-        handleComplete={handleComplete}
-        handleReset={handleReset}
-      />
+      {!hasOpenAiApiKey && (
+        <div className="scribe-settings-warning-container">
+          <h1>
+            ️<CircleAlert /> Missing Open AI API key
+          </h1>
+          <h2 className="scribe-settings-warning">
+            Please enter the key in the plugin settings.
+          </h2>
+          <p>You can get your API key here</p>
+          <a href="https://platform.openai.com/settings">OpenAI Platform</a>
+        </div>
+      )}
+      {hasOpenAiApiKey && (
+        <>
+          <ModalRecordingTimer startTimeMs={recordingStartTimeMs} />
+          <ModalRecordingButtons
+            recordingState={recordingState}
+            active={isActive}
+            isPaused={isPaused}
+            isScribing={isScribing}
+            handleStart={handleStart}
+            handlePauseResume={handlePauseResume}
+            handleComplete={handleComplete}
+            handleReset={handleReset}
+          />
+        </>
+      )}
 
       <hr />
-      <button onClick={() => setIsSettingsExpanded(!isSettingsExpanded)} type="button" className="scribe-settings-btn">
+      <button
+        onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
+        type="button"
+        className="scribe-settings-btn"
+      >
         Settings
       </button>
-      {isSettingsExpanded && (
 
-      <ModalSettings plugin={plugin} />
-      )}
+      {isSettingsExpanded && <ModalSettings plugin={plugin} />}
     </div>
   );
 };
