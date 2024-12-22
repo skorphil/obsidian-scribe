@@ -77,6 +77,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
       .setName('Directory for recordings')
       .setDesc('Defaults to your resources folder')
       .addDropdown((component) => {
+        component.addOption('', 'Vault folder');
         for (const folder of foldersInVault) {
           component.addOption(folder.path, folder.path);
         }
@@ -91,6 +92,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
       .setName('Directory for transcripts')
       .setDesc('Defaults to your new note folder')
       .addDropdown((component) => {
+        component.addOption('', 'Vault folder');
         for (const folder of foldersInVault) {
           component.addOption(folder.path, folder.path);
         }
