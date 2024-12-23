@@ -248,6 +248,8 @@ export default class ScribePlugin extends Plugin {
 
     await addAudioSourceToFrontmatter(this, note, audioRecordingFile);
 
+    await this.cleanup();
+
     const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
     this.app.workspace.openLinkText(note?.path, currentPath, true);
 
