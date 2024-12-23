@@ -115,6 +115,7 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
       {hasOpenAiApiKey && (
         <>
           <ModalRecordingTimer startTimeMs={recordingStartTimeMs} />
+
           <ModalRecordingButtons
             recordingState={recordingState}
             active={isActive}
@@ -125,21 +126,23 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
             handleComplete={handleComplete}
             handleReset={handleReset}
           />
-          <ModalRecordingOptions
-            isAppendToActiveFile={isAppendToActiveFile}
-            setIsAppendToActiveFile={setIsAppendToActiveFile}
-          />
         </>
       )}
 
       <hr />
-      <button
-        onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
-        type="button"
-        className="scribe-settings-btn"
-      >
-        Settings
-      </button>
+      <div className="scribe-options-container">
+        <button
+          onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
+          type="button"
+          className="scribe-settings-btn"
+        >
+          Settings
+        </button>
+        <ModalRecordingOptions
+          isAppendToActiveFile={isAppendToActiveFile}
+          setIsAppendToActiveFile={setIsAppendToActiveFile}
+        />
+      </div>
 
       {isSettingsExpanded && <ModalSettings plugin={plugin} />}
     </div>
