@@ -101,6 +101,10 @@ If your plugin does not need CSS, delete this file.
   display: flex;
   flex-direction: column;
   align-content: center;
+
+  hr {
+    margin: 5% 0%;
+  }
 }
 
 .scribe-settings-warning-container {
@@ -132,4 +136,13 @@ If your plugin does not need CSS, delete this file.
   :hover {
     background-color: #2222221a;
   }
+}
+
+.scribe-recording-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 5%;
 }

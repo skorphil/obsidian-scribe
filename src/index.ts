@@ -121,14 +121,19 @@ export default class ScribePlugin extends Plugin {
     }
   }
 
-  async scribe() {
+  async scribe(isAppendToActiveFile?: boolean) {
     try {
       const baseFileName = createBaseFileName();
 
       const { recordingBuffer, recordingFile } =
         await this.handleStopAndSaveRecording(baseFileName);
 
-      await this.handleScribeFile(baseFileName, recordingFile, recordingBuffer);
+      await this.handleScribeFile({
+        baseNoteAndAudioFileName: baseFileName,
+        audioRecordingFile: recordingFile,
+        audioRecordingBuffer: recordingBuffer,
+        isAppendToActiveFile,
+      });
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
       console.error('Scribe: Something went wrong', error);
@@ -151,7 +156,11 @@ export default class ScribePlugin extends Plugin {
 
       const audioFileBuffer = await this.app.vault.readBinary(audioFile);
 
-      await this.handleScribeFile(baseFileName, audioFile, audioFileBuffer);
+      await this.handleScribeFile({
+        baseNoteAndAudioFileName: baseFileName,
+        audioRecordingFile: audioFile,
+        audioRecordingBuffer: audioFileBuffer,
+      });
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
       console.error('Scribe: Something went wrong', error);
@@ -212,13 +221,31 @@ export default class ScribePlugin extends Plugin {
     return { recordingBuffer, recordingFile };
   }
 
-  async handleScribeFile(
-    baseNoteAndAudioFileName: string,
-    audioRecordingFile: TFile,
-    audioRecordingBuffer: ArrayBuffer,
-  ) {
+  async handleScribeFile({
+    baseNoteAndAudioFileName,
+    audioRecordingFile,
+    audioRecordingBuffer,
+    isAppendToActiveFile,
+  }: {
+    baseNoteAndAudioFileName: string;
+    audioRecordingFile: TFile;
+    audioRecordingBuffer: ArrayBuffer;
+    isAppendToActiveFile?: boolean;
+  }) {
     const scribeNoteFilename = `scribe-${baseNoteAndAudioFileName}`;
-    const note = await createNewNote(this, scribeNoteFilename);
+
+    let note = isAppendToActiveFile
+      ? this.app.workspace.getActiveFile()
+      : await createNewNote(this, scribeNoteFilename);
+
+    if (!note) {
+      new Notice('Scribe: ⚠️ No active file to append to, creating new one!');
+      note = await createNewNote(this, scribeNoteFilename);
+
+      const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
+      this.app.workspace.openLinkText(note?.path, currentPath, true);
+    }
+
     await addAudioSourceToFrontmatter(this, note, audioRecordingFile);
 
     const currentPath = this.app.workspace.getActiveFile()?.path ?? '';

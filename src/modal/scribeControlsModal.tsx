@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { ModalSettings } from './components/ModalSettings';
 import { ModalRecordingTimer } from './components/ModalRecordingTimer';
 import { ModalRecordingButtons } from './components/ModalRecordingButtons';
+import { ModalRecordingOptions } from './components/ModalRecordingOptions';
 import { CircleAlert } from './icons/icons';
 
 export class ScribeControlsModal extends Modal {
@@ -52,6 +53,7 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
   const [recordingStartTimeMs, setRecordingStartTimeMs] = useState<
     number | null
   >(null);
+  const [isAppendToActiveFile, setIsAppendToActiveFile] = useState(false);
 
   const hasOpenAiApiKey = Boolean(plugin.settings.openAiApiKey);
 
@@ -82,7 +84,7 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
     setIsScribing(true);
     setRecordingStartTimeMs(null);
     setRecordingState('inactive');
-    await plugin.scribe();
+    await plugin.scribe(isAppendToActiveFile);
     setIsPaused(false);
     setIsActive(false);
     setIsScribing(false);
@@ -122,6 +124,10 @@ const ScribeModal: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
             handlePauseResume={handlePauseResume}
             handleComplete={handleComplete}
             handleReset={handleReset}
+          />
+          <ModalRecordingOptions
+            isAppendToActiveFile={isAppendToActiveFile}
+            setIsAppendToActiveFile={setIsAppendToActiveFile}
           />
         </>
       )}
