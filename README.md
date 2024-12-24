@@ -5,6 +5,8 @@ Transform your voice into insights with Scribe, an Obsidian plugin that not only
 Dive into a seamless experience where your spoken words are effortlessly converted into a structured, easy-to-navigate knowledge base.  
 
 Forgot a phrase or concept while recording?  Ask "Hey Scribe" followed by a question in the middle of recording and it will fill in the blanks for you
+## Screenshots
+![obsidian-scribe-screenshots](https://github.com/user-attachments/assets/79eb4427-799a-47ba-8024-4d1350ac47cf)
 
 ## 🌟 Key Features
 - **Voice-to-Text Magic:** Begin recording and watch as your voice notes are transcribed, summarized, and turned into actionable insights.
