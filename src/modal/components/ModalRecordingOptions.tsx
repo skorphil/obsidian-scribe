@@ -1,13 +1,26 @@
+import type { ScribeOptions } from 'src';
+
 export function ModalRecordingOptions({
-  isAppendToActiveFile,
-  setIsAppendToActiveFile,
+  options,
+  setOptions,
 }: {
-  isAppendToActiveFile: boolean;
-  setIsAppendToActiveFile: (value: boolean) => void;
+  options: ScribeOptions;
+  setOptions: React.Dispatch<ScribeOptions>;
 }) {
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsAppendToActiveFile(event.target.checked);
+  const handleChangeIsAppendToActiveFile = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    // setIsAppendToActiveFile(event.target.checked);
+    setOptions({ ...options, isAppendToActiveFile: event.target.checked });
   };
+  const handleChangeIsOnlyTranscribeActive = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setOptions({ ...options, isOnlyTranscribeActive: event.target.checked });
+    // setIsOnlyTranscribeActive(event.target.checked);
+  };
+
+  const { isAppendToActiveFile, isOnlyTranscribeActive } = options;
 
   return (
     <div className="scribe-recording-options">
@@ -15,9 +28,18 @@ export function ModalRecordingOptions({
         <input
           type="checkbox"
           checked={isAppendToActiveFile}
-          onChange={handleCheckboxChange}
+          onChange={handleChangeIsAppendToActiveFile}
         />
         Append to active file
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          checked={isOnlyTranscribeActive}
+          onChange={handleChangeIsOnlyTranscribeActive}
+        />
+        Only transcribe recording
       </label>
     </div>
   );

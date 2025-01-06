@@ -46,6 +46,11 @@ const DEFAULT_STATE: ScribeState = {
   openAiClient: null,
 };
 
+export interface ScribeOptions {
+  isAppendToActiveFile?: boolean;
+  isOnlyTranscribeActive?: boolean;
+}
+
 export default class ScribePlugin extends Plugin {
   settings: ScribePluginSettings = DEFAULT_SETTINGS;
   state: ScribeState = DEFAULT_STATE;
@@ -121,7 +126,7 @@ export default class ScribePlugin extends Plugin {
     }
   }
 
-  async scribe(isAppendToActiveFile?: boolean) {
+  async scribe(scribeOptions: ScribeOptions = {}) {
     try {
       const baseFileName = createBaseFileName();
 
@@ -132,7 +137,7 @@ export default class ScribePlugin extends Plugin {
         baseNoteAndAudioFileName: baseFileName,
         audioRecordingFile: recordingFile,
         audioRecordingBuffer: recordingBuffer,
-        isAppendToActiveFile,
+        scribeOptions: scribeOptions,
       });
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
@@ -225,13 +230,14 @@ export default class ScribePlugin extends Plugin {
     baseNoteAndAudioFileName,
     audioRecordingFile,
     audioRecordingBuffer,
-    isAppendToActiveFile,
+    scribeOptions = {},
   }: {
     baseNoteAndAudioFileName: string;
     audioRecordingFile: TFile;
     audioRecordingBuffer: ArrayBuffer;
-    isAppendToActiveFile?: boolean;
+    scribeOptions?: ScribeOptions;
   }) {
+    const { isAppendToActiveFile, isOnlyTranscribeActive } = scribeOptions;
     const scribeNoteFilename = `scribe-${baseNoteAndAudioFileName}`;
 
     let note = isAppendToActiveFile
@@ -254,7 +260,11 @@ export default class ScribePlugin extends Plugin {
     this.app.workspace.openLinkText(note?.path, currentPath, true);
 
     const transcript = await this.handleTranscription(audioRecordingBuffer);
-    await addTranscriptToNote(this, note, transcript);
+    await addTranscriptToNote(this, note, transcript, isOnlyTranscribeActive);
+
+    if (isOnlyTranscribeActive) {
+      return;
+    }
 
     const llmSummary = await this.handleTranscriptSummary(transcript);
     await addSummaryToNote(this, note, llmSummary);
