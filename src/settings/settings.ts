@@ -125,7 +125,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
         }
         component.onChange(async (value: LLM_MODELS) => {
           this.plugin.settings.llmModel = value;
-          await this.plugin.saveSettings();
+          await this.saveSettings();
         });
 
         component.setValue(this.plugin.settings.llmModel);
@@ -141,7 +141,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
         }
         component.onChange(async (value: TRANSCRIPT_PLATFORM) => {
           this.plugin.settings.transcriptPlatform = value;
-          await this.plugin.saveSettings();
+          await this.saveSettings();
         });
 
         component.setValue(this.plugin.settings.transcriptPlatform);
