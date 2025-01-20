@@ -14,7 +14,6 @@ import {
   addAudioSourceToFrontmatter,
   addSummaryToNote,
   addTranscriptToNote,
-  createBaseFileName,
   createNewNote,
   renameFile,
   saveAudioRecording,
@@ -31,6 +30,7 @@ import {
 } from './util/mimeType';
 import { extractMermaidChart } from './util/textUtil';
 import { transcribeAudioWithAssemblyAi } from './util/assemblyAiUtil';
+import { formatFilenamePrefix } from './util/filenameUtils';
 
 export interface ScribeState {
   isOpen: boolean;
@@ -128,13 +128,15 @@ export default class ScribePlugin extends Plugin {
 
   async scribe(scribeOptions: ScribeOptions = {}) {
     try {
-      const baseFileName = createBaseFileName();
+      const baseFileName = formatFilenamePrefix(
+        this.settings.recordingFilenamePrefix,
+        this.settings.dateFilenameFormat,
+      );
 
       const { recordingBuffer, recordingFile } =
         await this.handleStopAndSaveRecording(baseFileName);
 
       await this.handleScribeFile({
-        baseNoteAndAudioFileName: baseFileName,
         audioRecordingFile: recordingFile,
         audioRecordingBuffer: recordingBuffer,
         scribeOptions: scribeOptions,
@@ -157,12 +159,10 @@ export default class ScribePlugin extends Plugin {
         new Notice('Scribe: ⚠️ This file type is not supported.');
         return;
       }
-      const baseFileName = createBaseFileName();
 
       const audioFileBuffer = await this.app.vault.readBinary(audioFile);
 
       await this.handleScribeFile({
-        baseNoteAndAudioFileName: baseFileName,
         audioRecordingFile: audioFile,
         audioRecordingBuffer: audioFileBuffer,
       });
@@ -227,18 +227,19 @@ export default class ScribePlugin extends Plugin {
   }
 
   async handleScribeFile({
-    baseNoteAndAudioFileName,
     audioRecordingFile,
     audioRecordingBuffer,
     scribeOptions = {},
   }: {
-    baseNoteAndAudioFileName: string;
     audioRecordingFile: TFile;
     audioRecordingBuffer: ArrayBuffer;
     scribeOptions?: ScribeOptions;
   }) {
     const { isAppendToActiveFile, isOnlyTranscribeActive } = scribeOptions;
-    const scribeNoteFilename = `scribe-${baseNoteAndAudioFileName}`;
+    const scribeNoteFilename = `${formatFilenamePrefix(
+      this.settings.noteFilenamePrefix,
+      this.settings.dateFilenameFormat,
+    )}`;
 
     let note = isAppendToActiveFile
       ? this.app.workspace.getActiveFile()
@@ -271,7 +272,11 @@ export default class ScribePlugin extends Plugin {
 
     const shouldRenameNote = !isAppendToActiveFile;
     if (shouldRenameNote) {
-      const llmFileName = `scribe-${moment().format('YYYY-MM-DD')}-${normalizePath(llmSummary.title)}`;
+      const llmFileName = `${formatFilenamePrefix(
+        this.settings.noteFilenamePrefix,
+        this.settings.dateFilenameFormat,
+      )}${normalizePath(llmSummary.title)}`;
+
       await renameFile(this, note, llmFileName);
     }
   }
@@ -298,7 +303,9 @@ export default class ScribePlugin extends Plugin {
       return transcript;
     } catch (error) {
       new Notice(
-        `Scribe: 🎧 🛑 Something went wrong trying to Transcribe w/  ${this.settings.transcriptPlatform}
+        `Scribe: 🎧 🛑 Something went wrong trying to Transcribe w/  ${
+          this.settings.transcriptPlatform
+        }
         ${error.toString()}`,
       );
 
