@@ -11,12 +11,18 @@ export function ModalRecordingOptions({
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     // setIsAppendToActiveFile(event.target.checked);
-    setOptions({ ...options, isAppendToActiveFile: event.target.checked });
+    setOptions({
+      ...options,
+      isAppendToActiveFile: event.target.checked,
+    });
   };
   const handleChangeIsOnlyTranscribeActive = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    setOptions({ ...options, isOnlyTranscribeActive: event.target.checked });
+    setOptions({
+      ...options,
+      isOnlyTranscribeActive: event.target.checked,
+    });
     // setIsOnlyTranscribeActive(event.target.checked);
   };
 
