@@ -33,7 +33,10 @@ function scribeDropDownMenu(plugin: ScribePlugin): Menu {
       item.setIcon('save');
       item.setTitle('Stop Recording');
       item.onClick(() => {
-        plugin.scribe();
+        plugin.scribe({
+          isSaveAudioFileActive: plugin.settings.isSaveAudioFileActive,
+          isOnlyTranscribeActive: plugin.settings.isOnlyTranscribeActive,
+        });
       });
     });
   } else {

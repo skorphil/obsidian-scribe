@@ -143,7 +143,9 @@ export default class ScribePlugin extends Plugin {
       });
 
       if (!scribeOptions.isSaveAudioFileActive) {
+        const fileName = recordingFile.name;
         await this.app.vault.delete(recordingFile);
+        new Notice(`Scribe: ✅🗑️ Audio file deleted ${fileName}`);
       }
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
