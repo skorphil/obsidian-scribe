@@ -11,11 +11,11 @@ import { handleCommands } from './commands/commands';
 import { getDefaultPathSettings } from './util/pathUtils';
 import { AudioRecord } from './audioRecord/audioRecord';
 import {
-  addAudioSourceToFrontmatter,
   appendTextToNote,
   createNewNote,
   renameFile,
   saveAudioRecording,
+  setupFileFrontmatter,
 } from './util/fileUtils';
 import {
   chunkAndTranscribeWithOpenAi,
@@ -48,6 +48,7 @@ const DEFAULT_STATE: ScribeState = {
 export interface ScribeOptions {
   isAppendToActiveFile?: boolean;
   isOnlyTranscribeActive?: boolean;
+  isSaveAudioFileActive?: boolean;
 }
 
 export default class ScribePlugin extends Plugin {
@@ -140,6 +141,10 @@ export default class ScribePlugin extends Plugin {
         audioRecordingBuffer: recordingBuffer,
         scribeOptions: scribeOptions,
       });
+
+      if (!scribeOptions.isSaveAudioFileActive) {
+        await this.app.vault.delete(recordingFile);
+      }
     } catch (error) {
       new Notice(`Scribe: Something went wrong ${error.toString()}`);
       console.error('Scribe: Something went wrong', error);
@@ -234,7 +239,11 @@ export default class ScribePlugin extends Plugin {
     audioRecordingBuffer: ArrayBuffer;
     scribeOptions?: ScribeOptions;
   }) {
-    const { isAppendToActiveFile, isOnlyTranscribeActive } = scribeOptions;
+    const {
+      isAppendToActiveFile,
+      isOnlyTranscribeActive,
+      isSaveAudioFileActive,
+    } = scribeOptions;
     const scribeNoteFilename = `${formatFilenamePrefix(
       this.settings.noteFilenamePrefix,
       this.settings.dateFilenameFormat,
@@ -252,7 +261,11 @@ export default class ScribePlugin extends Plugin {
       this.app.workspace.openLinkText(note?.path, currentPath, true);
     }
 
-    await addAudioSourceToFrontmatter(this, note, audioRecordingFile);
+    if (isSaveAudioFileActive) {
+      await setupFileFrontmatter(this, note, audioRecordingFile);
+    } else {
+      await setupFileFrontmatter(this, note);
+    }
 
     await this.cleanup();
 
