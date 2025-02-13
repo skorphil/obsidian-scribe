@@ -6,6 +6,7 @@ import type ScribePlugin from 'src';
 import type { ScribeOptions } from 'src';
 import type { LLM_MODELS } from 'src/util/openAiUtils';
 import type { TRANSCRIPT_PLATFORM } from 'src/settings/settings';
+import { ModalLanguageOptions } from './options/ModalLanguageOptions';
 
 export interface ScribeModelOptions {
   llmModel: LLM_MODELS;
@@ -22,34 +23,42 @@ export function ModalOptionsContainer({
   setOptions: React.Dispatch<ScribeOptions>;
 }) {
   const [isModelOptionsExpanded, setIsModalOptionsExpanded] = useState(false);
-  const [modelOptions, setModelOptions] = useState<ScribeModelOptions>({
-    llmModel: plugin.settings.llmModel,
-    transcriptPlatform: plugin.settings.transcriptPlatform,
-  });
+  const [isLanguageOptionsExpanded, setIsLanguageOptionsExpanded] =
+    useState(false);
 
   return (
     <div>
+      <p>Session settings</p>
       <div className="scribe-options-container">
-        <button
-          onClick={() => setIsModalOptionsExpanded(!isModelOptionsExpanded)}
-          type="button"
-          className="scribe-settings-btn"
-        >
-          Settings
-        </button>
-        <ModalRecordingOptions
-          plugin={plugin}
-          options={options}
-          setOptions={setOptions}
-          modelOptions={modelOptions}
-        />
+        <ModalRecordingOptions options={options} setOptions={setOptions} />
       </div>
+
+      <button
+        onClick={() => setIsLanguageOptionsExpanded(!isLanguageOptionsExpanded)}
+        type="button"
+        className="scribe-settings-btn"
+      >
+        Language options
+      </button>
+
+      <button
+        onClick={() => setIsModalOptionsExpanded(!isModelOptionsExpanded)}
+        type="button"
+        className="scribe-settings-btn"
+      >
+        Model options
+      </button>
+      {isLanguageOptionsExpanded && (
+        <>
+          <h5>Language options</h5>
+          <ModalLanguageOptions options={options} setOptions={setOptions} />
+        </>
+      )}
       {isModelOptionsExpanded && (
-        <ModalAiModelOptions
-          plugin={plugin}
-          modelOptions={modelOptions}
-          setModelOptions={setModelOptions}
-        />
+        <>
+          <h5>AI model options</h5>
+          <ModalAiModelOptions options={options} setOptions={setOptions} />
+        </>
       )}
     </div>
   );

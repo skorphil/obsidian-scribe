@@ -8,6 +8,7 @@ import { LLM_MODELS } from 'src/util/openAiUtils';
 
 import { FileNameSettings } from './components/FileNameSettings';
 import { AiModelSettings } from './components/AiModelSettings';
+import { LanguageOptions, type OutputLanguageOptions } from 'src/util/consts';
 
 export enum TRANSCRIPT_PLATFORM {
   assemblyAi = 'assemblyAi',
@@ -26,6 +27,8 @@ export interface ScribePluginSettings {
   dateFilenameFormat: string;
   isSaveAudioFileActive: boolean;
   isOnlyTranscribeActive: boolean;
+  audioFileLanguage: LanguageOptions;
+  scribeOutputLanguage: OutputLanguageOptions;
 }
 
 export const DEFAULT_SETTINGS: ScribePluginSettings = {
@@ -37,10 +40,12 @@ export const DEFAULT_SETTINGS: ScribePluginSettings = {
   isMultiSpeakerEnabled: false,
   llmModel: LLM_MODELS['gpt-4o'],
   noteFilenamePrefix: 'scribe-{{date}}-',
-  recordingFilenamePrefix: 'scribe-recording-{{date}}-',
+  recordingFilenamePrefix: 'scribe-recording-{{date}}',
   dateFilenameFormat: 'YYYY-MM-DD',
   isSaveAudioFileActive: true,
   isOnlyTranscribeActive: false,
+  audioFileLanguage: LanguageOptions.auto,
+  scribeOutputLanguage: LanguageOptions.en,
 };
 
 export async function handleSettingsTab(plugin: ScribePlugin) {

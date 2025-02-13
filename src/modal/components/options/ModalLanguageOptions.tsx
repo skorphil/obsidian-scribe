@@ -1,14 +1,12 @@
 import type { ScribeOptions } from 'src';
 import { SettingsItem } from 'src/settings/components/SettingsItem';
-import { TRANSCRIPT_PLATFORM } from 'src/settings/settings';
 import {
   LanguageDisplayNames,
   LanguageOptions,
   type OutputLanguageOptions,
 } from 'src/util/consts';
-import { LLM_MODELS } from 'src/util/openAiUtils';
 
-export function ModalAiModelOptions({
+export function ModalLanguageOptions({
   options,
   setOptions,
 }: {
@@ -22,26 +20,26 @@ export function ModalAiModelOptions({
     });
   };
 
-  const { transcriptPlatform, llmModel } = options;
+  const { audioFileLanguage, scribeOutputLanguage } = options;
 
   return (
     <div className="scribe-recording-options">
       <SettingsItem
-        name="LLM model"
+        name="Spoken language"
         description=""
         control={
           <select
-            defaultValue={llmModel}
+            defaultValue={audioFileLanguage}
             className="dropdown"
             onChange={(e) => {
               handleOptionsChange({
-                llmModel: e.target.value as LLM_MODELS,
+                audioFileLanguage: e.target.value as LanguageOptions,
               });
             }}
           >
-            {Object.keys(LLM_MODELS).map((model) => (
-              <option key={model} value={model}>
-                {model}
+            {Object.keys(LanguageOptions).map((lang) => (
+              <option key={lang} value={lang}>
+                {LanguageDisplayNames[lang as LanguageOptions]}
               </option>
             ))}
           </select>
@@ -49,23 +47,25 @@ export function ModalAiModelOptions({
       />
 
       <SettingsItem
-        name="Transcript platform"
+        name="Scribe output language"
         description=""
         control={
           <select
-            defaultValue={transcriptPlatform}
+            defaultValue={scribeOutputLanguage}
             className="dropdown"
             onChange={(e) => {
               handleOptionsChange({
-                transcriptPlatform: e.target.value as TRANSCRIPT_PLATFORM,
+                scribeOutputLanguage: e.target.value as OutputLanguageOptions,
               });
             }}
           >
-            {Object.keys(TRANSCRIPT_PLATFORM).map((platform) => (
-              <option key={platform} value={platform}>
-                {platform}
-              </option>
-            ))}
+            {Object.keys(LanguageOptions)
+              .filter((lang) => lang !== LanguageOptions.auto) // Remove auto
+              .map((lang) => (
+                <option key={lang} value={lang}>
+                  {LanguageDisplayNames[lang as LanguageOptions]}
+                </option>
+              ))}
           </select>
         }
       />
