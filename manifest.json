@@ -3,7 +3,7 @@
   "name": "Scribe",
   "version": "1.2.0",
   "minAppVersion": "0.15.0",
-  "description": "Record voice notes, Fill in lost thoughts, Transcribe the audio, Summarize & Visualize the text - All in one clip",
+  "description": "Record, transcribe, and transform voice notes into structured insights. Leverage Whisper or AssemblyAI and ChatGPT to fill in gaps, generate summaries, and visualize ideas — all seamlessly integrated within Obsidian.",
   "author": "Mike Alicea",
   "authorUrl": "https://github.com/Mikodin/",
   "fundingUrl": "https://buymeacoffee.com/mikealicea",
