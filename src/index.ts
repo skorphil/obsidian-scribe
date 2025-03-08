@@ -28,10 +28,11 @@ import {
   mimeTypeToFileExtension,
   type SupportedMimeType,
 } from './util/mimeType';
-import { extractMermaidChart } from './util/textUtil';
+import { convertToSafeJsonKey, extractMermaidChart } from './util/textUtil';
 import { transcribeAudioWithAssemblyAi } from './util/assemblyAiUtil';
 import { formatFilenamePrefix } from './util/filenameUtils';
 import type { LanguageOptions } from './util/consts';
+import type { ScribeTemplate } from './settings/components/NoteTemplateSettings';
 
 export interface ScribeState {
   isOpen: boolean;
@@ -56,6 +57,7 @@ export interface ScribeOptions {
   scribeOutputLanguage: Exclude<LanguageOptions, 'auto'>;
   transcriptPlatform: TRANSCRIPT_PLATFORM;
   llmModel: LLM_MODELS;
+  activeNoteTemplate: ScribeTemplate;
 }
 
 export default class ScribePlugin extends Plugin {
@@ -144,6 +146,7 @@ export default class ScribePlugin extends Plugin {
       scribeOutputLanguage: this.settings.scribeOutputLanguage,
       transcriptPlatform: this.settings.transcriptPlatform,
       llmModel: this.settings.llmModel,
+      activeNoteTemplate: this.settings.activeNoteTemplate,
     },
   ) {
     try {
@@ -185,6 +188,7 @@ export default class ScribePlugin extends Plugin {
       scribeOutputLanguage: this.settings.scribeOutputLanguage,
       transcriptPlatform: this.settings.transcriptPlatform,
       llmModel: this.settings.llmModel,
+      activeNoteTemplate: this.settings.activeNoteTemplate,
     },
   ) {
     try {
@@ -277,6 +281,7 @@ export default class ScribePlugin extends Plugin {
       isAppendToActiveFile,
       isOnlyTranscribeActive,
       isSaveAudioFileActive,
+      activeNoteTemplate,
     } = scribeOptions;
     const scribeNoteFilename = `${formatFilenamePrefix(
       this.settings.noteFilenamePrefix,
@@ -284,12 +289,12 @@ export default class ScribePlugin extends Plugin {
     )}`;
 
     let note = isAppendToActiveFile
-      ? this.app.workspace.getActiveFile()
+      ? (this.app.workspace.getActiveFile() as TFile)
       : await createNewNote(this, scribeNoteFilename);
 
     if (!note) {
       new Notice('Scribe: ⚠️ No active file to append to, creating new one!');
-      note = await createNewNote(this, scribeNoteFilename);
+      note = (await createNewNote(this, scribeNoteFilename)) as TFile;
 
       const currentPath = this.app.workspace.getActiveFile()?.path ?? '';
       this.app.workspace.openLinkText(note?.path, currentPath, true);
@@ -335,29 +340,42 @@ export default class ScribePlugin extends Plugin {
       transcript,
       scribeOptions,
     );
-    await appendTextToNote(this, note, `## Summary\n${llmSummary.summary}`);
-    await appendTextToNote(this, note, `## Insights\n${llmSummary.insights}`);
 
-    if (llmSummary.answeredQuestions) {
+    activeNoteTemplate.sections.forEach(async (section) => {
+      const {
+        sectionHeader,
+        sectionOutputPrefix,
+        sectionOutputPostfix,
+        isSectionOptional,
+      } = section;
+      const sectionKey = convertToSafeJsonKey(sectionHeader);
+      const sectionValue = llmSummary[sectionKey];
+
+      if (isSectionOptional && !sectionValue) {
+        return;
+      }
+
+      if (sectionOutputPrefix || sectionOutputPostfix) {
+        const textToAppend = `## ${sectionHeader}\n${sectionOutputPrefix || ''}\n${sectionValue}\n${sectionOutputPostfix || ''}`;
+
+        await appendTextToNote(this, note, textToAppend);
+
+        return;
+      }
+
       await appendTextToNote(
         this,
         note,
-        `## Answered Questions\n${llmSummary.answeredQuestions}`,
+        `## ${sectionHeader}\n${sectionValue}`,
       );
-    }
-
-    await appendTextToNote(
-      this,
-      note,
-      `## Mermaid Chart\n\`\`\`mermaid\n${llmSummary.mermaidChart}\n\`\`\``,
-    );
+    });
 
     const shouldRenameNote = !isAppendToActiveFile;
-    if (shouldRenameNote) {
+    if (shouldRenameNote && llmSummary.fileTitle) {
       const llmFileName = `${formatFilenamePrefix(
         this.settings.noteFilenamePrefix,
         this.settings.dateFilenameFormat,
-      )}${normalizePath(llmSummary.title)}`;
+      )}${normalizePath(llmSummary.fileTitle)}`;
 
       await renameFile(this, note, llmFileName);
     }
@@ -406,12 +424,14 @@ export default class ScribePlugin extends Plugin {
     scribeOptions: ScribeOptions,
   ) {
     new Notice('Scribe: 🧠 Sending to LLM to summarize');
+
     const llmSummary = await summarizeTranscript(
       this.settings.openAiApiKey,
       transcript,
       scribeOptions,
       this.settings.llmModel,
     );
+
     new Notice('Scribe: 🧠 LLM summation complete');
 
     return llmSummary;

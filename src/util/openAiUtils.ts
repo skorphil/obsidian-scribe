@@ -8,12 +8,12 @@ import audioDataToChunkedFiles from './audioDataToChunkedFiles';
 import type { FileLike } from 'openai/uploads';
 import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { SystemMessage } from '@langchain/core/messages';
 
-import { JsonOutputParser } from '@langchain/core/output_parsers';
 import { Notice } from 'obsidian';
 import type { ScribeOptions } from 'src';
 import { LanguageOptions } from './consts';
+import { convertToSafeJsonKey } from './textUtil';
 
 export enum LLM_MODELS {
   'gpt-4o-mini' = 'gpt-4o-mini',
@@ -84,17 +84,10 @@ async function transcribeAudio(
   return transcript;
 }
 
-export interface LLMSummary {
-  summary: string;
-  title: string;
-  insights: string;
-  mermaidChart: string;
-  answeredQuestions?: string;
-}
 export async function summarizeTranscript(
   openAiKey: string,
   transcript: string,
-  { scribeOutputLanguage }: ScribeOptions,
+  { scribeOutputLanguage, activeNoteTemplate }: ScribeOptions,
   llmModel: LLM_MODELS = LLM_MODELS['gpt-4o'],
 ) {
   const systemPrompt = `
@@ -136,43 +129,27 @@ export async function summarizeTranscript(
     );
   }
 
-  const noteSummary = z.object({
-    summary: z.string().describe(
-      `A summary of the transcript in Markdown.  It will be nested under a h2 # tag, so use a tag less than that for headers
-         Concise bullet points containing the primary points of the speaker
-        `,
-    ),
-    insights: z.string().describe(
-      `Insights that you gained from the transcript in Markdown.
-        A brief section, a paragraph or two on what insights and enhancements you think of
-        Several bullet points on things you think would be an improvement, feel free to use headers
-        It will be nested under an h2 tag, so use a tag less than that for headers
-        `,
-    ),
-    mermaidChart: z.string().describe(
-      `A valid unicode mermaid chart that shows a concept map consisting of both what insights you had along with what the speaker said for the mermaid chart, 
-        Dont wrap it in anything, just output the mermaid chart.  
-        Do not use any special characters that arent letters in the nodes text, particularly new lines, tabs, or special characters like apostraphes or quotes or commas`,
-    ),
-    answeredQuestions: z
-      .string()
-      .optional()
-      .nullable()
-      .describe(
-        `If the user says "Hey Scribe" or alludes to you, asking you to do something, answer the question or do the ask and put the answers here
-        Put the text in markdown, it will be nested under an h2 tag, so use a tag less than that for headers
-        Summarize the question in a short sentence as a header and format place your reply nicely below for as many questions as there are
-        Answer their questions in a clear and concise manner
-      `,
-      ),
-    title: z
+  const schema: Record<string, z.ZodType<string | null | undefined>> = {
+    fileTitle: z
       .string()
       .describe(
         'A suggested title for the Obsidian Note. Ensure that it is in the proper format for a file on mac, windows and linux, do not include any special characters',
       ),
+  };
+
+  activeNoteTemplate.sections.forEach((section) => {
+    const { sectionHeader, sectionInstructions, isSectionOptional } = section;
+    schema[convertToSafeJsonKey(sectionHeader)] = isSectionOptional
+      ? z.string().optional().nullable().describe(sectionInstructions)
+      : z.string().describe(sectionInstructions);
   });
-  const structuredLlm = model.withStructuredOutput(noteSummary);
-  const result = (await structuredLlm.invoke(messages)) as LLMSummary;
+
+  const structuredOutput = z.object(schema);
+  const structuredLlm = model.withStructuredOutput(structuredOutput);
+  const result = (await structuredLlm.invoke(messages)) as Record<
+    string,
+    string
+  > & { fileTitle: string };
 
   return await result;
 }
