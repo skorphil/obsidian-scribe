@@ -142,7 +142,7 @@ export async function summarizeTranscript(
   activeNoteTemplate.sections.forEach((section) => {
     const { sectionHeader, sectionInstructions, isSectionOptional } = section;
     schema[convertToSafeJsonKey(sectionHeader)] = isSectionOptional
-      ? z.string().optional().nullable().describe(sectionInstructions)
+      ? z.string().nullish().describe(sectionInstructions)
       : z.string().describe(sectionInstructions);
   });
 
