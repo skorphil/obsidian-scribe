@@ -1,4 +1,8 @@
-import { AssemblyAI, type TranscribeParams } from 'assemblyai';
+import {
+  AssemblyAI,
+  type TranscriptParagraph,
+  type TranscribeParams,
+} from 'assemblyai';
 import type { ScribeOptions } from 'src';
 import { LanguageOptions } from './consts';
 
@@ -27,12 +31,27 @@ export async function transcribeAudioWithAssemblyAi(
 
   const transcript = await client.transcripts.transcribe(params);
 
+  let formattedParagraphs: TranscriptParagraph[] | undefined;
+  try {
+    const { paragraphs } = await client.transcripts.paragraphs(transcript.id);
+    formattedParagraphs = paragraphs;
+  } catch (error) {
+    console.error(
+      'Failed to fetch paragraphs from AssemblyAI, moving forward with raw text:',
+      error,
+    );
+  }
+
   let transcriptText = '';
 
   if (isMultiSpeakerEnabled && transcript.utterances) {
     transcriptText = (transcript.utterances || [])
       .map((utterance) => `**Speaker ${utterance.speaker}**: ${utterance.text}`)
       .join('\n');
+  } else if (formattedParagraphs) {
+    transcriptText = formattedParagraphs
+      .map((paragraph) => paragraph.text)
+      .join('\n\n');
   } else {
     transcriptText = transcript.text || '';
   }
