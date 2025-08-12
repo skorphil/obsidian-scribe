@@ -16,23 +16,30 @@ export function AudioDeviceSettings({
 }) {
   const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDeviceId, setSelectedDeviceId] = useState(plugin.settings.selectedAudioDeviceId);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(
+    plugin.settings.selectedAudioDeviceId,
+  );
 
   useEffect(() => {
     const getAudioDevices = async () => {
+      console.log('Fetching audio devices...');
       try {
         // Request permission to access media devices
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        stream.getTracks().forEach((track) => track.stop());
+
         // Get list of audio input devices
         const devices = await navigator.mediaDevices.enumerateDevices();
         const audioInputDevices = devices
-          .filter(device => device.kind === 'audioinput')
-          .map(device => ({
+          .filter((device) => device.kind === 'audioinput')
+          .map((device) => ({
             deviceId: device.deviceId,
-            label: device.label || `Microphone (${device.deviceId.slice(0, 8)}...)`
+            label:
+              device.label || `Microphone (${device.deviceId.slice(0, 8)}...)`,
           }));
-        
+
         setAudioDevices(audioInputDevices);
       } catch (error) {
         console.error('Error getting audio devices:', error);
