@@ -22,7 +22,6 @@ export function AudioDeviceSettings({
 
   useEffect(() => {
     const getAudioDevices = async () => {
-      console.log('Fetching audio devices...');
       try {
         // Request permission to access media devices
         const stream = await navigator.mediaDevices.getUserMedia({
