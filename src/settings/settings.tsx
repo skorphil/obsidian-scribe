@@ -48,6 +48,11 @@ export interface ScribePluginSettings {
   isFrontMatterLinkToScribe: boolean;
   selectedAudioDeviceId: string;
   audioFileFormat: 'webm' | 'mp3';
+  // Custom OpenAI settings
+  useCustomOpenAiBaseUrl: boolean;
+  customOpenAiBaseUrl: string;
+  customTranscriptModel: string;
+  customChatModel: string;
 }
 
 export const DEFAULT_SETTINGS: ScribePluginSettings = {
@@ -72,6 +77,11 @@ export const DEFAULT_SETTINGS: ScribePluginSettings = {
   isFrontMatterLinkToScribe: true,
   selectedAudioDeviceId: '',
   audioFileFormat: 'webm',
+  // Custom OpenAI settings
+  useCustomOpenAiBaseUrl: false,
+  customOpenAiBaseUrl: '',
+  customTranscriptModel: 'whisper-1',
+  customChatModel: 'gpt-4o',
 };
 
 export async function handleSettingsTab(plugin: ScribePlugin) {
