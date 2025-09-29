@@ -1,18 +1,19 @@
+import { SystemMessage } from '@langchain/core/messages';
+import { ChatOpenAI } from '@langchain/openai';
 /**
  * This was heavily inspired by
  * https://github.com/drewmcdonald/obsidian-magic-mic
  * Thank you for traversing this in such a clean way
  */
 import OpenAI from 'openai';
-import audioDataToChunkedFiles from './audioDataToChunkedFiles';
 import type { FileLike } from 'openai/uploads';
-import { ChatOpenAI } from '@langchain/openai';
 import { z } from 'zod';
-import { SystemMessage } from '@langchain/core/messages';
+import audioDataToChunkedFiles from './audioDataToChunkedFiles';
 
 import { Notice } from 'obsidian';
 import type { ScribeOptions } from 'src';
 import { LanguageOptions } from './consts';
+import { obsidianOpenAIFetch } from './obsidianOpenAIFetch';
 import { convertToSafeJsonKey } from './textUtil';
 
 export enum LLM_MODELS {
@@ -33,6 +34,7 @@ export async function chunkAndTranscribeWithOpenAi(
   customModel?: string,
 ) {
   const openAiClient = new OpenAI({
+    fetch: obsidianOpenAIFetch,
     apiKey: openAiKey,
     dangerouslyAllowBrowser: true,
     ...(customBaseUrl && { baseURL: customBaseUrl }),
@@ -65,7 +67,12 @@ interface TranscriptionOptions {
 
 async function transcribeAudio(
   client: OpenAI,
-  { audioFiles, onChunkStart, audioFileLanguage, customModel }: TranscriptionOptions,
+  {
+    audioFiles,
+    onChunkStart,
+    audioFileLanguage,
+    customModel,
+  }: TranscriptionOptions,
 ): Promise<string> {
   let transcript = '';
   for (const [i, file] of audioFiles.entries()) {
@@ -131,7 +138,9 @@ export async function summarizeTranscript(
     model: modelToUse,
     apiKey: openAiKey,
     temperature: 0.5,
-    ...(customBaseUrl && { configuration: { baseURL: customBaseUrl } }),
+    ...(customBaseUrl && {
+      configuration: { baseURL: customBaseUrl, fetch: obsidianOpenAIFetch },
+    }),
   });
   const messages = [new SystemMessage(systemPrompt)];
 
