@@ -1,21 +1,21 @@
 import { type App, Notice, PluginSettingTab, Setting, moment } from 'obsidian';
-import { createRoot, type Root } from 'react-dom/client';
+import { type Root, createRoot } from 'react-dom/client';
 import { useDebounce } from 'src/util/useDebounce';
 
 import type ScribePlugin from 'src';
 
 import { LLM_MODELS } from 'src/util/openAiUtils';
 
-import { FileNameSettings } from './components/FileNameSettings';
+import { LanguageOptions, type OutputLanguageOptions } from 'src/util/consts';
+import { getDefaultPathSettings } from 'src/util/pathUtils';
 import { AiModelSettings } from './components/AiModelSettings';
 import { AudioDeviceSettings } from './components/AudioDeviceSettings';
-import { LanguageOptions, type OutputLanguageOptions } from 'src/util/consts';
+import { FileNameSettings } from './components/FileNameSettings';
 import {
   DEFAULT_TEMPLATE,
-  type ScribeTemplate,
   NoteTemplateSettings,
+  type ScribeTemplate,
 } from './components/NoteTemplateSettings';
-import { getDefaultPathSettings } from 'src/util/pathUtils';
 
 export enum TRANSCRIPT_PLATFORM {
   assemblyAi = 'assemblyAi',
@@ -190,7 +190,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
           await this.saveSettings();
         });
       });
-      
+
     new Setting(containerEl)
       .setName('Audio file format')
       .setDesc(
@@ -280,7 +280,10 @@ const ScribeSettings: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
 
   return (
     <div>
-      <AudioDeviceSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
+      <AudioDeviceSettings
+        plugin={plugin}
+        saveSettings={debouncedSaveSettings}
+      />
       <AiModelSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
       <FileNameSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
       <NoteTemplateSettings
