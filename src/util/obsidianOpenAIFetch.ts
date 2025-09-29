@@ -50,6 +50,11 @@ export const obsidianOpenAIFetch: Fetch = async (requestInfo, init) => {
     obsidianParams.method = init.method;
   }
 
+  if (obsidianParams.headers) {
+    // SimpleURLLoaderWrapper will throw ERR_INVALID_ARGUMENT if you try to pass this
+    delete obsidianParams.headers['content-length'];
+  }
+
   console.debug();
   try {
     const obsidianResponse = await requestUrl(obsidianParams);
