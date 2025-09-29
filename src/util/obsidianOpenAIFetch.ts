@@ -7,7 +7,8 @@ import type { Fetch } from 'openai/core';
 
 /**
  * A custom 'fetch' implementation for OpenAI SDK that wraps Obsidian's
- * 'requestUrl()' to avoid CORS issue with Gemini.
+ * 'requestUrl()' to avoid CORS issue when new ChatOpenAI used with
+ * Gemini OpenAI-compatible API.
  * @example
  * const openAiClient = new OpenAI({fetch: obsidianOpenAIFetch})
  * const model = new ChatOpenAI({ configuration: { fetch: obsidianFetch }})
@@ -51,7 +52,7 @@ export const obsidianOpenAIFetch: Fetch = async (requestInfo, init) => {
   }
 
   if (obsidianParams.headers) {
-    // SimpleURLLoaderWrapper will throw ERR_INVALID_ARGUMENT if you try to pass this
+    //biome-ignore lint/performance/noDelete: SimpleURLLoaderWrapper will throw ERR_INVALID_ARGUMENT if you try to pass this header
     delete obsidianParams.headers['content-length'];
   }
 
