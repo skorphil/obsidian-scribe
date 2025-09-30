@@ -4,16 +4,17 @@
  * Thank you for traversing this in such a clean way
  */
 
-import { Notice } from 'obsidian';
-import { fixWebmDuration } from '@fix-webm-duration/fix';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { fixWebmDuration } from '@fix-webm-duration/fix';
+import { Notice } from 'obsidian';
 
 import {
+  type SupportedMimeType,
   mimeTypeToFileExtension,
   pickMimeType,
-  type SupportedMimeType,
 } from 'src/util/mimeType';
+import { cutSilenceFromBlob } from './cutSilence';
 
 export class AudioRecord {
   mediaRecorder: MediaRecorder | null;
@@ -33,9 +34,8 @@ export class AudioRecord {
   }
 
   async startRecording(deviceId?: string) {
-    const audioConstraints = deviceId && deviceId !== '' 
-      ? { deviceId: { exact: deviceId } }
-      : true;
+    const audioConstraints =
+      deviceId && deviceId !== '' ? { deviceId: { exact: deviceId } } : true;
 
     navigator.mediaDevices
       .getUserMedia({ audio: audioConstraints })
@@ -85,25 +85,39 @@ export class AudioRecord {
     try {
       const ffmpeg = new FFmpeg();
       const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-      
+
       // Load FFmpeg
       await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        coreURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.js`,
+          'text/javascript',
+        ),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          'application/wasm',
+        ),
       });
-      
+
       // Write input WebM file
       await ffmpeg.writeFile('input.webm', await fetchFile(webmBlob));
-      
+
       // Convert WebM to MP3
-      await ffmpeg.exec(['-i', 'input.webm', '-c:a', 'libmp3lame', '-q:a', '2', 'output.mp3']);
-      
+      await ffmpeg.exec([
+        '-i',
+        'input.webm',
+        '-c:a',
+        'libmp3lame',
+        '-q:a',
+        '2',
+        'output.mp3',
+      ]);
+
       // Read the output file
       const data = await ffmpeg.readFile('output.mp3');
-      
+
       // Create a Blob from the output data
       const mp3Blob = new Blob([data], { type: 'audio/mp3' });
-      
+
       return mp3Blob;
     } catch (error) {
       console.error('Error converting WebM to MP3:', error);
@@ -132,7 +146,9 @@ export class AudioRecord {
             throw new Error('No audio data recorded.');
           }
 
-          const blob = new Blob(this.data, { type: this.mimeType });
+          let blob = new Blob(this.data, { type: this.mimeType });
+          // Test implementation
+          blob = await cutSilenceFromBlob(blob);
           const duration = (this.startTime && Date.now() - this.startTime) || 0;
           const fixedBlob = await fixWebmDuration(blob, duration, {});
 
@@ -145,8 +161,13 @@ export class AudioRecord {
               const mp3Blob = await this.convertWebmToMp3(fixedBlob);
               resolve(mp3Blob);
             } catch (conversionError) {
-              console.error('Error converting to MP3, falling back to WebM:', conversionError);
-              new Notice('Scribe: Failed to convert to MP3, saving as WebM instead');
+              console.error(
+                'Error converting to MP3, falling back to WebM:',
+                conversionError,
+              );
+              new Notice(
+                'Scribe: Failed to convert to MP3, saving as WebM instead',
+              );
               resolve(fixedBlob);
             }
           } else {
