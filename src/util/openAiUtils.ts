@@ -29,10 +29,13 @@ export async function chunkAndTranscribeWithOpenAi(
   openAiKey: string,
   audioBuffer: ArrayBuffer,
   { audioFileLanguage }: Pick<ScribeOptions, 'audioFileLanguage'>,
+  customBaseUrl?: string,
+  customModel?: string,
 ) {
   const openAiClient = new OpenAI({
     apiKey: openAiKey,
     dangerouslyAllowBrowser: true,
+    ...(customBaseUrl && { baseURL: customBaseUrl }),
   });
   const audioFiles = await audioDataToChunkedFiles(audioBuffer, MAX_CHUNK_SIZE);
   new Notice(`Scribe: 🎧 Split transcript into ${audioFiles.length} files`);
@@ -40,6 +43,7 @@ export async function chunkAndTranscribeWithOpenAi(
   const transcript = await transcribeAudio(openAiClient, {
     audioFiles,
     audioFileLanguage,
+    customModel,
   });
 
   return transcript;
@@ -56,11 +60,12 @@ interface TranscriptionOptions {
   audioFiles: FileLike[];
   onChunkStart?: (i: number, totalChunks: number) => void;
   audioFileLanguage?: LanguageOptions;
+  customModel?: string;
 }
 
 async function transcribeAudio(
   client: OpenAI,
-  { audioFiles, onChunkStart, audioFileLanguage }: TranscriptionOptions,
+  { audioFiles, onChunkStart, audioFileLanguage, customModel }: TranscriptionOptions,
 ): Promise<string> {
   let transcript = '';
   for (const [i, file] of audioFiles.entries()) {
@@ -71,8 +76,9 @@ async function transcribeAudio(
     const useAudioFileLanguageSetting =
       audioFileLanguage && audioFileLanguage !== LanguageOptions.auto;
 
+    const modelToUse = customModel || 'whisper-1';
     const baseOptions = {
-      model: 'whisper-1',
+      model: modelToUse,
       file,
     };
     const whisperOptions = useAudioFileLanguageSetting
@@ -91,6 +97,8 @@ export async function summarizeTranscript(
   transcript: string,
   { scribeOutputLanguage, activeNoteTemplate }: ScribeOptions,
   llmModel: LLM_MODELS = LLM_MODELS['gpt-4o'],
+  customBaseUrl?: string,
+  customChatModel?: string,
 ) {
   const systemPrompt = `
   You are "Scribe" an expert note-making AI for Obsidian you specialize in the Linking Your Thinking (LYK) strategy.  
@@ -118,10 +126,12 @@ export async function summarizeTranscript(
   ${transcript}
   </transcript>
   `;
+  const modelToUse = customChatModel || llmModel;
   const model = new ChatOpenAI({
-    model: llmModel,
+    model: modelToUse,
     apiKey: openAiKey,
     temperature: 0.5,
+    ...(customBaseUrl && { configuration: { baseURL: customBaseUrl } }),
   });
   const messages = [new SystemMessage(systemPrompt)];
 
@@ -160,6 +170,8 @@ export async function llmFixMermaidChart(
   openAiKey: string,
   brokenMermaidChart: string,
   llmModel: LLM_MODELS = LLM_MODELS['gpt-4o'],
+  customBaseUrl?: string,
+  customChatModel?: string,
 ) {
   const systemPrompt = `
 You are an expert in mermaid charts and Obsidian (the note taking app)
@@ -174,10 +186,12 @@ ${brokenMermaidChart}
 
 Thank you
   `;
+  const modelToUse = customChatModel || llmModel;
   const model = new ChatOpenAI({
-    model: llmModel,
+    model: modelToUse,
     apiKey: openAiKey,
     temperature: 0.3,
+    ...(customBaseUrl && { configuration: { baseURL: customBaseUrl } }),
   });
   const messages = [new SystemMessage(systemPrompt)];
   const structuredOutput = z.object({

@@ -229,10 +229,20 @@ export default class ScribePlugin extends Plugin {
 
       let fixedMermaidChart: string | undefined;
       if (brokenMermaidChart) {
+        const customBaseUrl = this.settings.useCustomOpenAiBaseUrl 
+          ? this.settings.customOpenAiBaseUrl 
+          : undefined;
+        const customChatModel = this.settings.useCustomOpenAiBaseUrl 
+          ? this.settings.customChatModel 
+          : undefined;
+        
         fixedMermaidChart = (
           await llmFixMermaidChart(
             this.settings.openAiApiKey,
             brokenMermaidChart,
+            this.settings.llmModel,
+            customBaseUrl,
+            customChatModel,
           )
         ).mermaidChart;
       }
@@ -412,6 +422,12 @@ export default class ScribePlugin extends Plugin {
               this.settings.openAiApiKey,
               audioBuffer,
               scribeOptions,
+              this.settings.useCustomOpenAiBaseUrl 
+                ? this.settings.customOpenAiBaseUrl 
+                : undefined,
+              this.settings.useCustomOpenAiBaseUrl 
+                ? this.settings.customTranscriptModel 
+                : undefined,
             );
 
       new Notice(
@@ -437,11 +453,20 @@ export default class ScribePlugin extends Plugin {
   ) {
     new Notice('Scribe: 🧠 Sending to LLM to summarize');
 
+    const customBaseUrl = this.settings.useCustomOpenAiBaseUrl 
+      ? this.settings.customOpenAiBaseUrl 
+      : undefined;
+    const customChatModel = this.settings.useCustomOpenAiBaseUrl 
+      ? this.settings.customChatModel 
+      : undefined;
+
     const llmSummary = await summarizeTranscript(
       this.settings.openAiApiKey,
       transcript,
       scribeOptions,
       this.settings.llmModel,
+      customBaseUrl,
+      customChatModel,
     );
 
     new Notice('Scribe: 🧠 LLM summation complete');
