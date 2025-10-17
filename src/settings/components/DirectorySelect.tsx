@@ -1,7 +1,7 @@
-import { usePlugin } from './SettingsFormProvider';
-import { SettingsSelect } from './components/SettingsControl';
-import { OBSIDIAN_PATHS, type ScribePluginSettings } from './settings';
-import useSettingsForm from './useSettingsForm';
+import useSettingsForm from '../hooks/useSettingsForm';
+import { usePlugin } from '../provider/SettingsFormProvider';
+import { OBSIDIAN_PATHS, type ScribePluginSettings } from '../settings';
+import { SettingsSelect } from './SettingsControl';
 
 interface DirectorySelectProps<K extends keyof ScribePluginSettings> {
   id: K;

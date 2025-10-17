@@ -7,14 +7,11 @@ import {
 } from 'react';
 import type ScribePlugin from 'src';
 import { useDebounce } from 'src/util/useDebounce';
-import type { ScribePluginSettings } from './settings';
+import type { ScribePluginSettings } from '../settings';
 
 const SettingsFormContext = createContext<ScribePluginSettings | undefined>(
   undefined,
 );
-// const SettingsFormUpdaterContext = createContext<
-//   React.Dispatch<React.SetStateAction<ScribePluginSettings>> | undefined
-// >(undefined);
 
 const PluginContext = createContext<ScribePlugin | undefined>(undefined);
 
@@ -45,7 +42,6 @@ export function SettingsFormProvider({
     id: K,
     value: ScribePluginSettings[K],
   ) {
-    console.log(settings);
     setSettings((state) => ({ ...state, [id]: value }));
   }
 

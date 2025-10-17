@@ -1,20 +1,14 @@
-import { type ReactElement, useState } from 'react';
-import type ScribePlugin from 'src';
-import {
-  LanguageDisplayNames,
-  LanguageOptions,
-  type OutputLanguageOptions,
-} from 'src/util/consts';
-import DirectorySelect from './DirectorySelect';
-import { AudioDeviceSettings } from './components/AudioDeviceSettings';
+import { LanguageDisplayNames, LanguageOptions } from 'src/util/consts';
+import { formatFilenamePrefix } from 'src/util/filenameUtils';
+import AudioDeviceSettings from './components/AudioDeviceSettings';
+import DirectorySelect from './components/DirectorySelect';
 import {
   SettingsInput,
   SettingsSelect,
   SettingsToggle,
 } from './components/SettingsControl';
 import { SettingsItemHeader } from './components/SettingsItem';
-import { OBSIDIAN_PATHS, type ScribePluginSettings } from './settings';
-import useSettingsForm from './useSettingsForm';
+import useSettingsForm from './hooks/useSettingsForm';
 
 const languagesMapping = Object.entries(LanguageDisplayNames)
   .filter(([value]) => value !== LanguageOptions.auto)
@@ -24,12 +18,16 @@ const languagesMapping = Object.entries(LanguageDisplayNames)
  * Tab, containing general settings
  */
 function GeneralSettingsTab() {
-  const { register } = useSettingsForm();
+  const { register, settings } = useSettingsForm();
+
+  const isDateInPrefix =
+    (settings.noteFilenamePrefix || '').includes('{{date}}') ||
+    (settings.recordingFilenamePrefix || '').includes('{{date}}');
 
   return (
     <div>
       <SettingsItemHeader name="Audio" />
-      {/* <AudioDeviceSettings plugin={plugin} saveSettings={saveSettings} /> */}
+      <AudioDeviceSettings />
       <SettingsItemHeader name="AI Processing" />
       <SettingsToggle
         {...register('isDisableLlmTranscription', {
@@ -39,7 +37,7 @@ function GeneralSettingsTab() {
           displayValue: (value) => !value,
           setValueAs: (value) => !value,
         })}
-        name="Recordings transcription"
+        name="Transcribe recordings"
         description="If disabled, audio will not be sent to any LLM for transcription"
       />
       <SettingsToggle
@@ -50,7 +48,7 @@ function GeneralSettingsTab() {
           displayValue: (value) => !value,
           setValueAs: (value) => !value,
         })}
-        name="Transcription LLM processing & synthesis"
+        name="Process transcriptions with LLM"
         description="If disabled, we will only transcribe recordings without summarization, insights etc."
       />
 
@@ -70,6 +68,11 @@ function GeneralSettingsTab() {
       />
 
       <SettingsItemHeader name="Transcripts" />
+      <SettingsToggle
+        name="Append transcript to active file"
+        description="If true, the default behavior will be to append the transcription to the active file. If false, it will create a new note with the transcription."
+        {...register('isAppendToActiveFile')}
+      />
       <DirectorySelect
         {...register('transcriptDirectory')}
         name="Directory for transcripts"
@@ -77,16 +80,7 @@ function GeneralSettingsTab() {
       <SettingsToggle
         name='Link to Scribe in "created_by" frontmatter'
         description="If true, we will add a link to the Scribe in the frontmatter of the note.  This is useful for knowing which notes were created by Scribe."
-        {...register('isFrontMatterLinkToScribe', {
-          displayValue: (value) => !value,
-          setValueAs: (value) => !value,
-        })}
-      />
-      <SettingsInput
-        {...register('noteFilenamePrefix')}
-        name="Transcript filename prefix"
-        description="This will be the prefix of the note filename, use {{date}} to include the date"
-        placeholder="scribe-"
+        {...register('isFrontMatterLinkToScribe')}
       />
 
       <SettingsItemHeader name="Recordings" />
@@ -94,6 +88,65 @@ function GeneralSettingsTab() {
         {...register('recordingDirectory')}
         name="Directory for recordings"
       />
+      <SettingsToggle
+        name="Save audio file"
+        description='Save the audio file after Scribing it. If false, the audio file will be permanently deleted after transcription. This will not affect the Command for "Transcribe existing file"'
+        {...register('isSaveAudioFileActive')}
+      />
+      <SettingsSelect
+        {...register('audioFileFormat')}
+        name="Audio file format"
+        description="Choose the format for saving audio recordings. MP3 format will be converted from WebM on the client side."
+        valuesMapping={[
+          {
+            value: 'webm',
+            displayName: 'WebM',
+          },
+          {
+            value: 'mp3',
+            displayName: 'MP3',
+          },
+        ]}
+      />
+      <SettingsItemHeader name="File names settings" />
+      <SettingsInput
+        {...register('recordingFilenamePrefix')}
+        name="Audio recording filename prefix"
+        description="This will be the prefix of the audio recording filename, use {{date}} to include the date"
+        placeholder="scribe-"
+      />
+      <SettingsInput
+        {...register('noteFilenamePrefix')}
+        name="Transcript filename prefix"
+        description="This will be the prefix of the note filename, use {{date}} to include the date"
+        placeholder="scribe-"
+      />
+      <SettingsInput
+        {...register('dateFilenameFormat')}
+        name="Date format"
+        description="This will only be used if {{date}} is in the transcript or audio recording filename prefix above"
+        placeholder="YYYY-MM-DD"
+        disabled={!isDateInPrefix}
+      />
+
+      {isDateInPrefix && (
+        <div>
+          <p>
+            {formatFilenamePrefix(
+              `${settings.noteFilenamePrefix}`,
+              settings.dateFilenameFormat,
+            )}
+            filename
+          </p>
+          <p>
+            {formatFilenamePrefix(
+              `${settings.recordingFilenamePrefix}`,
+              settings.dateFilenameFormat,
+            )}
+            filename
+          </p>
+        </div>
+      )}
     </div>
   );
 }

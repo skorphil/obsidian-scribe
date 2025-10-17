@@ -169,5 +169,8 @@ button[role="tab"][aria-selected="true"].settings-tab {
 }
 
 nav[role="tabpanel"] {
-  padding: 12px 0;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 0 0 24px 0;
 }

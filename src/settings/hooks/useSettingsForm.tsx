@@ -1,6 +1,9 @@
 import type ScribePlugin from 'src';
-import { useSettings, useSettingsUpdater } from './SettingsFormProvider';
-import type { ScribePluginSettings } from './settings';
+import {
+  useSettings,
+  useSettingsUpdater,
+} from '../provider/SettingsFormProvider';
+import type { ScribePluginSettings } from '../settings';
 
 interface UseSettingsFormProps {
   plugin: ScribePlugin;
@@ -40,7 +43,7 @@ function useSettingsForm() {
     };
   }
 
-  return { register };
+  return { register, settings };
 }
 
 export default useSettingsForm;
