@@ -1,21 +1,26 @@
 import { type App, Notice, PluginSettingTab, Setting, moment } from 'obsidian';
-import { createRoot, type Root } from 'react-dom/client';
+import { type Root, createRoot } from 'react-dom/client';
 import { useDebounce } from 'src/util/useDebounce';
 
 import type ScribePlugin from 'src';
 
 import { LLM_MODELS } from 'src/util/openAiUtils';
 
-import { FileNameSettings } from './components/FileNameSettings';
+import { useState } from 'react';
+import { LanguageOptions, type OutputLanguageOptions } from 'src/util/consts';
+import { LanguageOptions, type OutputLanguageOptions } from 'src/util/consts';
+import { getDefaultPathSettings } from 'src/util/pathUtils';
+import { boolean } from 'zod';
+import GeneralSettingsTab from './GeneralSettingsTab';
+import { SettingsFormProvider } from './SettingsFormProvider';
 import { AiModelSettings } from './components/AiModelSettings';
 import { AudioDeviceSettings } from './components/AudioDeviceSettings';
-import { LanguageOptions, type OutputLanguageOptions } from 'src/util/consts';
 import {
   DEFAULT_TEMPLATE,
-  type ScribeTemplate,
   NoteTemplateSettings,
+  type ScribeTemplate,
 } from './components/NoteTemplateSettings';
-import { getDefaultPathSettings } from 'src/util/pathUtils';
+import useSettingsForm from './useSettingsForm';
 
 export enum TRANSCRIPT_PLATFORM {
   assemblyAi = 'assemblyAi',
@@ -101,7 +106,6 @@ export class ScribeSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
 
     containerEl.empty();
-
     this.plugin.loadSettings();
 
     new Setting(containerEl)
@@ -157,25 +161,25 @@ export class ScribeSettingsTab extends PluginSettingTab {
         component.setValue(this.plugin.settings.recordingDirectory);
       });
 
-    new Setting(containerEl)
-      .setName('Directory for transcripts')
-      .setDesc('Defaults to your new note folder')
-      .addDropdown(async (component) => {
-        const defaultPathSettings = await getDefaultPathSettings(this.plugin);
+    // new Setting(containerEl)
+    //   .setName('Directory for transcripts')
+    //   .setDesc('Defaults to your new note folder')
+    //   .addDropdown(async (component) => {
+    //     // const defaultPathSettings = await getDefaultPathSettings(this.plugin);
 
-        component.addOption('', 'Vault folder');
-        component.addOption(OBSIDIAN_PATHS.noteFolder, 'Obsidian note folder');
-        for (const folder of foldersInVault) {
-          const folderName = folder.path === '' ? 'Vault Folder' : folder.path;
-          component.addOption(folder.path, folderName);
-        }
-        component.onChange(async (value) => {
-          this.plugin.settings.transcriptDirectory = value;
-          await this.saveSettings();
-        });
+    //     component.addOption('', 'Vault folder');
+    //     component.addOption(OBSIDIAN_PATHS.noteFolder, 'Obsidian note folder');
+    //     for (const folder of foldersInVault) {
+    //       const folderName = folder.path === '' ? 'Vault Folder' : folder.path;
+    //       component.addOption(folder.path, folderName);
+    //     }
+    //     component.onChange(async (value) => {
+    //       this.plugin.settings.transcriptDirectory = value;
+    //       await this.saveSettings();
+    //     });
 
-        component.setValue(this.plugin.settings.transcriptDirectory);
-      });
+    //     component.setValue(this.plugin.settings.transcriptDirectory);
+    //   });
 
     containerEl.createEl('h2', { text: 'Default recording options' });
     new Setting(containerEl)
@@ -190,7 +194,7 @@ export class ScribeSettingsTab extends PluginSettingTab {
           await this.saveSettings();
         });
       });
-      
+
     new Setting(containerEl)
       .setName('Audio file format')
       .setDesc(
@@ -207,18 +211,18 @@ export class ScribeSettingsTab extends PluginSettingTab {
           });
       });
 
-    new Setting(containerEl)
-      .setName('Only transcribe recording')
-      .setDesc(
-        'If true, we will only transcribe the recording and not generate anything additional like a summary, insights or a new filename.',
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.isOnlyTranscribeActive);
-        toggle.onChange(async (value) => {
-          this.plugin.settings.isOnlyTranscribeActive = value;
-          await this.saveSettings();
-        });
-      });
+    // new Setting(containerEl)
+    //   .setName('Only transcribe recording')
+    //   .setDesc(
+    //     'If true, we will only transcribe the recording and not generate anything additional like a summary, insights or a new filename.',
+    //   )
+    //   .addToggle((toggle) => {
+    //     toggle.setValue(this.plugin.settings.isOnlyTranscribeActive);
+    //     toggle.onChange(async (value) => {
+    //       this.plugin.settings.isOnlyTranscribeActive = value;
+    //       await this.saveSettings();
+    //     });
+    //   });
 
     new Setting(containerEl)
       .setName('Append to active file by default')
@@ -233,18 +237,18 @@ export class ScribeSettingsTab extends PluginSettingTab {
         });
       });
 
-    new Setting(containerEl)
-      .setName('Link to Scribe in "created_by" frontmatter')
-      .setDesc(
-        'If true, we will add a link to the Scribe in the frontmatter of the note.  This is useful for knowing which notes were created by Scribe.',
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.isFrontMatterLinkToScribe);
-        toggle.onChange(async (value) => {
-          this.plugin.settings.isFrontMatterLinkToScribe = value;
-          await this.saveSettings();
-        });
-      });
+    // new Setting(containerEl)
+    //   .setName('Link to Scribe in "created_by" frontmatter')
+    //   .setDesc(
+    //     'If true, we will add a link to the Scribe in the frontmatter of the note.  This is useful for knowing which notes were created by Scribe.',
+    //   )
+    //   .addToggle((toggle) => {
+    //     toggle.setValue(this.plugin.settings.isFrontMatterLinkToScribe);
+    //     toggle.onChange(async (value) => {
+    //       this.plugin.settings.isFrontMatterLinkToScribe = value;
+    //       await this.saveSettings();
+    //     });
+    //   });
 
     const reactTestWrapper = containerEl.createDiv({
       cls: 'scribe-settings-react',
@@ -274,19 +278,88 @@ export class ScribeSettingsTab extends PluginSettingTab {
 }
 
 const ScribeSettings: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
+  const [selectedTab, setSelectedTab] = useState<SettingsTabsId>(
+    SettingsTabsId.GENERAL,
+  );
   const debouncedSaveSettings = useDebounce(() => {
     plugin.saveSettings();
   }, 500);
 
+  const handleTabSelect = (tabId: SettingsTabsId) => {
+    setSelectedTab(tabId);
+  };
+
   return (
-    <div>
-      <AudioDeviceSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
-      <AiModelSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
-      <FileNameSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
-      <NoteTemplateSettings
-        plugin={plugin}
-        saveSettings={debouncedSaveSettings}
-      />
-    </div>
+    <SettingsFormProvider plugin={plugin}>
+      <div>
+        <nav role="tabpanel">
+          {settingsTabs.map((tab) => (
+            <Tab
+              onSelect={() => handleTabSelect(tab.id)}
+              selected={tab.id === selectedTab}
+              key={tab.id}
+            >
+              {tab.name}
+            </Tab>
+          ))}
+        </nav>
+        {(() => {
+          switch (selectedTab) {
+            case SettingsTabsId.GENERAL:
+              return <GeneralSettingsTab />;
+            default:
+              return <span>No tab selected</span>;
+          }
+        })()}
+        <AiModelSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
+        <FileNameSettings
+          plugin={plugin}
+          saveSettings={debouncedSaveSettings}
+        />
+        <NoteTemplateSettings
+          plugin={plugin}
+          saveSettings={debouncedSaveSettings}
+        />
+      </div>
+    </SettingsFormProvider>
+  );
+};
+
+enum SettingsTabsId {
+  GENERAL = 'general',
+  AI_PROVIDERS = 'ai-providers',
+  TEMPLATES = 'templates',
+}
+
+const settingsTabs = [
+  {
+    name: 'General',
+    id: SettingsTabsId.GENERAL,
+  },
+  {
+    name: 'AI Providers',
+    id: SettingsTabsId.AI_PROVIDERS,
+  },
+  {
+    name: 'Templates',
+    id: SettingsTabsId.TEMPLATES,
+  },
+];
+
+const Tab: React.FC<{
+  onSelect: () => void;
+  children: string;
+  selected?: boolean;
+}> = ({ onSelect, selected, children }) => {
+  return (
+    <button
+      onClick={onSelect}
+      className="settings-tab scribe"
+      type="button"
+      aria-selected={selected}
+      role="tab"
+    >
+      {children}
+    </button>
   );
 };

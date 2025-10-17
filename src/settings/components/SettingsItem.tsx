@@ -13,3 +13,15 @@ export const SettingsItem: React.FC<{
     </div>
   );
 };
+
+export const SettingsItemHeader: React.FC<{
+  name: string;
+}> = ({ name }) => {
+  return (
+    <div className="setting-item setting-item-heading">
+      <div className="setting-item-info">
+        <div className="setting-item-name">{name}</div>
+      </div>
+    </div>
+  );
+};
