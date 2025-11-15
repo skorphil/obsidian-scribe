@@ -1,21 +1,22 @@
-import { type App, Notice, PluginSettingTab, Setting, moment } from 'obsidian';
-import { createRoot, type Root } from 'react-dom/client';
+import { type App, PluginSettingTab, Setting } from 'obsidian';
+import { type Root, createRoot } from 'react-dom/client';
 import { useDebounce } from 'src/util/useDebounce';
 
 import type ScribePlugin from 'src';
 
 import { LLM_MODELS } from 'src/util/openAiUtils';
 
-import { FileNameSettings } from './components/FileNameSettings';
-import { AiModelSettings } from './components/AiModelSettings';
-import { AudioDeviceSettings } from './components/AudioDeviceSettings';
+import { useState } from 'react';
 import { LanguageOptions, type OutputLanguageOptions } from 'src/util/consts';
+import GeneralSettingsTab from './GeneralSettingsTab';
+import ProviderSettingsTab from './ProviderSettingsTab';
+import { AiModelSettings } from './components/AiModelSettings';
 import {
   DEFAULT_TEMPLATE,
-  type ScribeTemplate,
   NoteTemplateSettings,
+  type ScribeTemplate,
 } from './components/NoteTemplateSettings';
-import { getDefaultPathSettings } from 'src/util/pathUtils';
+import { SettingsFormProvider } from './provider/SettingsFormProvider';
 
 export enum TRANSCRIPT_PLATFORM {
   assemblyAi = 'assemblyAi',
@@ -101,156 +102,13 @@ export class ScribeSettingsTab extends PluginSettingTab {
     const { containerEl } = this;
 
     containerEl.empty();
-
     this.plugin.loadSettings();
 
-    new Setting(containerEl)
-      .setName('Open AI API key')
-      .setDesc(
-        'You can find this in your OpenAI dev console - https://platform.openai.com/settings',
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder('sk-....')
-          .setValue(this.plugin.settings.openAiApiKey)
-          .onChange(async (value) => {
-            this.plugin.settings.openAiApiKey = value;
-            await this.plugin.saveSettings();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName('AssemblyAI API key')
-      .setDesc(
-        'You can find this in your AssemblyAI dev console - https://www.assemblyai.com/app/account',
-      )
-      .addText((text) =>
-        text
-          .setPlaceholder('c3p0....')
-          .setValue(this.plugin.settings.assemblyAiApiKey)
-          .onChange(async (value) => {
-            this.plugin.settings.assemblyAiApiKey = value;
-            await this.plugin.saveSettings();
-          }),
-      );
-
-    const foldersInVault = this.plugin.app.vault.getAllFolders();
-
-    new Setting(containerEl)
-      .setName('Directory for recordings')
-      .setDesc('Defaults to your resources folder')
-      .addDropdown((component) => {
-        component.addOption('', 'Vault folder');
-        component.addOption(
-          OBSIDIAN_PATHS.resourceFolder,
-          'Obsidian resource folder',
-        );
-        for (const folder of foldersInVault) {
-          const folderName = folder.path ? folder.path : 'Vault Folder';
-          component.addOption(folder.path, folderName);
-        }
-        component.onChange(async (value) => {
-          this.plugin.settings.recordingDirectory = value;
-          await this.saveSettings();
-        });
-
-        component.setValue(this.plugin.settings.recordingDirectory);
-      });
-
-    new Setting(containerEl)
-      .setName('Directory for transcripts')
-      .setDesc('Defaults to your new note folder')
-      .addDropdown(async (component) => {
-        const defaultPathSettings = await getDefaultPathSettings(this.plugin);
-
-        component.addOption('', 'Vault folder');
-        component.addOption(OBSIDIAN_PATHS.noteFolder, 'Obsidian note folder');
-        for (const folder of foldersInVault) {
-          const folderName = folder.path === '' ? 'Vault Folder' : folder.path;
-          component.addOption(folder.path, folderName);
-        }
-        component.onChange(async (value) => {
-          this.plugin.settings.transcriptDirectory = value;
-          await this.saveSettings();
-        });
-
-        component.setValue(this.plugin.settings.transcriptDirectory);
-      });
-
-    containerEl.createEl('h2', { text: 'Default recording options' });
-    new Setting(containerEl)
-      .setName('Save audio file')
-      .setDesc(
-        `Save the audio file after Scribing it. If false, the audio file will be permanently deleted after transcription. This will not affect the Command for "Transcribe existing file"`,
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.isSaveAudioFileActive);
-        toggle.onChange(async (value) => {
-          this.plugin.settings.isSaveAudioFileActive = value;
-          await this.saveSettings();
-        });
-      });
-      
-    new Setting(containerEl)
-      .setName('Audio file format')
-      .setDesc(
-        'Choose the format for saving audio recordings. MP3 format will be converted from WebM on the client side.',
-      )
-      .addDropdown((dropdown) => {
-        dropdown
-          .addOption('webm', 'WebM')
-          .addOption('mp3', 'MP3')
-          .setValue(this.plugin.settings.audioFileFormat)
-          .onChange(async (value: 'webm' | 'mp3') => {
-            this.plugin.settings.audioFileFormat = value;
-            await this.saveSettings();
-          });
-      });
-
-    new Setting(containerEl)
-      .setName('Only transcribe recording')
-      .setDesc(
-        'If true, we will only transcribe the recording and not generate anything additional like a summary, insights or a new filename.',
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.isOnlyTranscribeActive);
-        toggle.onChange(async (value) => {
-          this.plugin.settings.isOnlyTranscribeActive = value;
-          await this.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Append to active file by default')
-      .setDesc(
-        'If true, the default behavior will be to append the transcription to the active file. If false, it will create a new note with the transcription.',
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.isAppendToActiveFile);
-        toggle.onChange(async (value) => {
-          this.plugin.settings.isAppendToActiveFile = value;
-          await this.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName('Link to Scribe in "created_by" frontmatter')
-      .setDesc(
-        'If true, we will add a link to the Scribe in the frontmatter of the note.  This is useful for knowing which notes were created by Scribe.',
-      )
-      .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.isFrontMatterLinkToScribe);
-        toggle.onChange(async (value) => {
-          this.plugin.settings.isFrontMatterLinkToScribe = value;
-          await this.saveSettings();
-        });
-      });
-
-    const reactTestWrapper = containerEl.createDiv({
+    const reactWrapper = containerEl.createDiv({
       cls: 'scribe-settings-react',
     });
 
-    this.reactRoot = createRoot(reactTestWrapper);
+    this.reactRoot = createRoot(reactWrapper);
     this.reactRoot.render(<ScribeSettings plugin={this.plugin} />);
 
     new Setting(containerEl).addButton((button) => {
@@ -274,19 +132,96 @@ export class ScribeSettingsTab extends PluginSettingTab {
 }
 
 const ScribeSettings: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
+  const [selectedTab, setSelectedTab] = useState<SettingsTabsId>(
+    SettingsTabsId.GENERAL,
+  );
   const debouncedSaveSettings = useDebounce(() => {
     plugin.saveSettings();
   }, 500);
 
+  const handleTabSelect = (tabId: SettingsTabsId) => {
+    setSelectedTab(tabId);
+  };
+
   return (
-    <div>
-      <AudioDeviceSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
-      <AiModelSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
-      <FileNameSettings plugin={plugin} saveSettings={debouncedSaveSettings} />
-      <NoteTemplateSettings
-        plugin={plugin}
-        saveSettings={debouncedSaveSettings}
-      />
-    </div>
+    <SettingsFormProvider plugin={plugin}>
+      <div>
+        <nav role="tabpanel">
+          {settingsTabs.map((tab) => (
+            <Tab
+              onSelect={() => handleTabSelect(tab.id)}
+              selected={tab.id === selectedTab}
+              key={tab.id}
+            >
+              {tab.name}
+            </Tab>
+          ))}
+        </nav>
+        {(() => {
+          switch (selectedTab) {
+            case SettingsTabsId.GENERAL:
+              return <GeneralSettingsTab />;
+            case SettingsTabsId.AI_PROVIDERS:
+              return (
+                <>
+                  <ProviderSettingsTab />
+                  <AiModelSettings
+                    plugin={plugin}
+                    saveSettings={debouncedSaveSettings}
+                  />
+                </>
+              );
+            case SettingsTabsId.TEMPLATES:
+              return (
+                <NoteTemplateSettings
+                  plugin={plugin}
+                  saveSettings={debouncedSaveSettings}
+                />
+              );
+            default:
+              return <span>No tab selected</span>;
+          }
+        })()}
+      </div>
+    </SettingsFormProvider>
+  );
+};
+
+enum SettingsTabsId {
+  GENERAL = 'general',
+  AI_PROVIDERS = 'ai-providers',
+  TEMPLATES = 'templates',
+}
+
+const settingsTabs = [
+  {
+    name: 'General',
+    id: SettingsTabsId.GENERAL,
+  },
+  {
+    name: 'AI Providers',
+    id: SettingsTabsId.AI_PROVIDERS,
+  },
+  {
+    name: 'Templates',
+    id: SettingsTabsId.TEMPLATES,
+  },
+];
+
+const Tab: React.FC<{
+  onSelect: () => void;
+  children: string;
+  selected?: boolean;
+}> = ({ onSelect, selected, children }) => {
+  return (
+    <button
+      onClick={onSelect}
+      className="settings-tab scribe"
+      type="button"
+      aria-selected={selected}
+      role="tab"
+    >
+      {children}
+    </button>
   );
 };

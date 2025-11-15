@@ -1,24 +1,24 @@
 import { useEffect, useState } from 'react';
-import type ScribePlugin from 'src';
-import { SettingsItem } from './SettingsItem';
+import useSettingsForm from '../hooks/useSettingsForm';
+import { SettingsSelect } from './SettingsControl';
 
 interface AudioDevice {
   deviceId: string;
   label: string;
 }
 
-export function AudioDeviceSettings({
-  plugin,
-  saveSettings,
-}: {
-  plugin: ScribePlugin;
-  saveSettings: () => void;
-}) {
-  const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
+/**
+ * Settings input for selecting audio devices
+ */
+function AudioDeviceSettings() {
+  const { register } = useSettingsForm();
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDeviceId, setSelectedDeviceId] = useState(
-    plugin.settings.selectedAudioDeviceId,
-  );
+  const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([]);
+
+  const valuesMapping = audioDevices.map((device) => ({
+    displayName: device.label,
+    value: device.deviceId,
+  }));
 
   useEffect(() => {
     const getAudioDevices = async () => {
@@ -50,34 +50,16 @@ export function AudioDeviceSettings({
     getAudioDevices();
   }, []);
 
-  const handleDeviceChange = (deviceId: string) => {
-    setSelectedDeviceId(deviceId);
-    plugin.settings.selectedAudioDeviceId = deviceId;
-    saveSettings();
-  };
-
-  return (
-    <SettingsItem
+  return isLoading ? (
+    <div>Loading devices...</div>
+  ) : (
+    <SettingsSelect
+      {...register('selectedAudioDeviceId')}
       name="Audio Input Device"
       description="Select which microphone to use for recording"
-      control={
-        isLoading ? (
-          <div>Loading devices...</div>
-        ) : (
-          <select
-            value={selectedDeviceId}
-            className="dropdown"
-            onChange={(e) => handleDeviceChange(e.target.value)}
-          >
-            <option value="">System Default</option>
-            {audioDevices.map((device) => (
-              <option key={device.deviceId} value={device.deviceId}>
-                {device.label}
-              </option>
-            ))}
-          </select>
-        )
-      }
+      valuesMapping={valuesMapping}
     />
   );
 }
+
+export default AudioDeviceSettings;

@@ -155,3 +155,22 @@ If your plugin does not need CSS, delete this file.
     margin-bottom: .5em;
   }
 }
+
+button[role="tab"].settings-tab {
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+button[role="tab"].settings-tab:hover {
+  background-color: var(--background-modifier-hover);
+}
+button[role="tab"][aria-selected="true"].settings-tab {
+  background-color: var(--background-modifier-hover);
+}
+
+nav[role="tabpanel"] {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 0 0 24px 0;
+}
