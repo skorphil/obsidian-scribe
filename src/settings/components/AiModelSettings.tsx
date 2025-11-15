@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import type ScribePlugin from 'src';
-import { LLM_MODELS } from 'src/util/openAiUtils';
-import { TRANSCRIPT_PLATFORM } from '../settings';
+// import { LLM_MODELS } from 'src/util/openAiUtils';
+// import { TRANSCRIPT_PLATFORM } from '../settings';
 import { SettingsItem } from './SettingsItem';
 
 export const AiModelSettings: React.FC<{
   plugin: ScribePlugin;
   saveSettings: () => void;
 }> = ({ plugin, saveSettings }) => {
-  const [transcriptPlatform, setTranscriptPlatform] =
-    useState<TRANSCRIPT_PLATFORM>(plugin.settings.transcriptPlatform);
-  const [llmModel, setLlmModel] = useState<LLM_MODELS>(
-    plugin.settings.llmModel,
-  );
+  // const [transcriptPlatform, setTranscriptPlatform] =
+  //   useState<TRANSCRIPT_PLATFORM>(plugin.settings.transcriptPlatform);
+  // const [llmModel, setLlmModel] = useState<LLM_MODELS>(
+  //   plugin.settings.llmModel,
+  // );
   const [isMultiSpeakerEnabled, setIsMultiSpeakerEnabled] = useState(
     plugin.settings.isMultiSpeakerEnabled,
   );
@@ -73,8 +73,8 @@ export const AiModelSettings: React.FC<{
 
   return (
     <div>
-      <h2>AI model options</h2>
-      <SettingsItem
+      {/* <h2>AI model options</h2> */}
+      {/* <SettingsItem
         name="Transcript platform"
         description="Your recording is uploaded to this service"
         control={
@@ -92,9 +92,9 @@ export const AiModelSettings: React.FC<{
             <option value={TRANSCRIPT_PLATFORM.assemblyAi}>AssemblyAI</option>
           </select>
         }
-      />
+      /> */}
 
-      {transcriptPlatform === TRANSCRIPT_PLATFORM.assemblyAi && (
+      {/* {transcriptPlatform === TRANSCRIPT_PLATFORM.assemblyAi && (
         <SettingsItem
           name="Multi-speaker enabled"
           description="Enable this if you have multiple speakers in your recording"
@@ -118,9 +118,9 @@ export const AiModelSettings: React.FC<{
             </div>
           }
         />
-      )}
+      )} */}
 
-      <SettingsItem
+      {/* <SettingsItem
         name="LLM model for creating the summary"
         description="The transcript is sent to this service"
         control={
@@ -141,9 +141,10 @@ export const AiModelSettings: React.FC<{
             ))}
           </select>
         }
-      />
+      /> */}
 
       <h3>Custom OpenAI Configuration</h3>
+
       <SettingsItem
         name="Use custom OpenAI base URL"
         description="Enable this to use a custom OpenAI-compatible API endpoint (e.g., local LLM server, Azure OpenAI, etc.)"
@@ -170,7 +171,7 @@ export const AiModelSettings: React.FC<{
 
       {useCustomOpenAiBaseUrl && (
         <>
-          <SettingsItem
+          {/* <SettingsItem
             name="Custom OpenAI base URL"
             description="The base URL for your custom OpenAI-compatible API (e.g., http://localhost:1234/v1, https://your-instance.openai.azure.com/)"
             control={
@@ -184,9 +185,9 @@ export const AiModelSettings: React.FC<{
                 className="text-input"
               />
             }
-          />
+          /> */}
 
-          <SettingsItem
+          {/* <SettingsItem
             name="Custom transcription model"
             description="The model name to use for audio transcription (e.g., whisper-1, faster-whisper, etc.)"
             control={
@@ -200,9 +201,9 @@ export const AiModelSettings: React.FC<{
                 className="text-input"
               />
             }
-          />
+          /> */}
 
-          <SettingsItem
+          {/* <SettingsItem
             name="Custom chat model"
             description="The model name to use for chat/summarization (e.g., gpt-4, llama-3.1-8b-instruct, etc.)"
             control={
@@ -214,7 +215,7 @@ export const AiModelSettings: React.FC<{
                 className="text-input"
               />
             }
-          />
+          /> */}
         </>
       )}
     </div>

@@ -21,6 +21,13 @@ import { SettingsFormProvider } from './provider/SettingsFormProvider';
 export enum TRANSCRIPT_PLATFORM {
   assemblyAi = 'assemblyAi',
   openAi = 'openAi',
+  customOpenAi = 'customOpenAi',
+  google = 'google',
+}
+export enum PROCESS_PLATFORM {
+  openAi = 'openAi',
+  customOpenAi = 'customOpenAi',
+  google = 'google',
 }
 
 export enum OBSIDIAN_PATHS {
@@ -50,10 +57,12 @@ export interface ScribePluginSettings {
   selectedAudioDeviceId: string;
   audioFileFormat: 'webm' | 'mp3';
   // Custom OpenAI settings
-  useCustomOpenAiBaseUrl: boolean;
+  useCustomOpenAiBaseUrl: boolean; // TODO replace with processPlatform, transcriptPlatform
   customOpenAiBaseUrl: string;
   customTranscriptModel: string;
   customChatModel: string;
+  // Provider settings
+  processPlatform: PROCESS_PLATFORM;
 }
 
 export const DEFAULT_SETTINGS: ScribePluginSettings = {
@@ -83,6 +92,7 @@ export const DEFAULT_SETTINGS: ScribePluginSettings = {
   customOpenAiBaseUrl: '',
   customTranscriptModel: 'whisper-1',
   customChatModel: 'gpt-4o',
+  processPlatform: PROCESS_PLATFORM.openAi,
 };
 
 export async function handleSettingsTab(plugin: ScribePlugin) {
@@ -165,10 +175,10 @@ const ScribeSettings: React.FC<{ plugin: ScribePlugin }> = ({ plugin }) => {
               return (
                 <>
                   <ProviderSettingsTab />
-                  <AiModelSettings
+                  {/* <AiModelSettings
                     plugin={plugin}
                     saveSettings={debouncedSaveSettings}
-                  />
+                  /> */}
                 </>
               );
             case SettingsTabsId.TEMPLATES:
